@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,18 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowRight, ArrowLeft, FileText, CreditCard, Check } from "lucide-react";
-import { createClient } from "@supabase/supabase-js";
-
-// Get Supabase URL and Key from environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
-
-// Check if Supabase credentials are available
-if (!supabaseUrl || !supabaseKey) {
-  console.error("Supabase credentials are missing. Please check your environment variables.");
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabase } from "@/integrations/supabase/client";
 
 const PatientSignup = () => {
   const { toast } = useToast();
@@ -51,7 +39,6 @@ const PatientSignup = () => {
     paymentInfo: null,
   });
   
-  // Step 1: Personal Information Form
   const personalInfoSchema = z.object({
     email: z.string().email({ message: "Please enter a valid email address" }),
     password: z.string().min(8, { message: "Password must be at least 8 characters" }),
@@ -65,7 +52,6 @@ const PatientSignup = () => {
     zipCode: z.string().min(1, { message: "Zip code is required" }),
   });
 
-  // Step 2: Medical History Form
   const medicalHistorySchema = z.object({
     primaryConcern: z.string().min(1, { message: "Primary concern is required" }),
     painLevel: z.string().min(1, { message: "Pain level is required" }),
@@ -79,7 +65,6 @@ const PatientSignup = () => {
     physicianContact: z.string().optional(),
   });
 
-  // Step 3: Consent Forms
   const consentFormsSchema = z.object({
     treatmentConsent: z.boolean().refine(val => val === true, {
       message: "You must agree to the treatment consent",
@@ -95,7 +80,6 @@ const PatientSignup = () => {
     }),
   });
 
-  // Step 4: Payment Information
   const paymentInfoSchema = z.object({
     cardName: z.string().min(1, { message: "Name on card is required" }),
     cardNumber: z.string().min(16, { message: "Valid card number is required" }).max(16),
@@ -174,27 +158,21 @@ const PatientSignup = () => {
     setFormData(prev => ({ ...prev, medicalHistory: data }));
     setStep(3);
     
-    // Check if we need to load a specific assessment form based on injury location
     if (data.injuryLocation.toLowerCase().includes('back')) {
-      // Load Oswestry Form in next step
       loadOswestryForm();
     } else if (data.injuryLocation.toLowerCase().includes('neck') || 
               data.injuryLocation.toLowerCase().includes('thoracic')) {
-      // Load Neck Disability Index
       loadNeckDisabilityForm();
     } else if (['shoulder', 'elbow', 'wrist', 'hand', 'finger'].some(
       part => data.injuryLocation.toLowerCase().includes(part))) {
-      // Load QuickDASH
       loadQuickDashForm();
     } else if (['hip', 'knee', 'foot', 'ankle'].some(
       part => data.injuryLocation.toLowerCase().includes(part))) {
-      // Load LEFS
       loadLefsForm();
     }
   };
 
   const loadOswestryForm = () => {
-    // This would load the specific assessment form
     console.log("Loading Oswestry Disability Index form");
   };
 
@@ -219,7 +197,6 @@ const PatientSignup = () => {
     setFormData(prev => ({ ...prev, paymentInfo: data }));
     
     try {
-      // First create the user account with Supabase
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.personalInfo?.email,
         password: formData.personalInfo?.password,
@@ -228,7 +205,6 @@ const PatientSignup = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Create patient profile in database
         const { error: profileError } = await supabase
           .from('patients')
           .insert([
@@ -242,13 +218,11 @@ const PatientSignup = () => {
               city: formData.personalInfo?.city,
               state: formData.personalInfo?.state,
               zip_code: formData.personalInfo?.zipCode,
-              // Add additional profile data as needed
             }
           ]);
 
         if (profileError) throw profileError;
 
-        // Create medical history record
         const { error: medicalError } = await supabase
           .from('patient_medical_history')
           .insert([
@@ -269,7 +243,6 @@ const PatientSignup = () => {
 
         if (medicalError) throw medicalError;
 
-        // Store consent information
         const { error: consentError } = await supabase
           .from('patient_consents')
           .insert([
@@ -285,15 +258,11 @@ const PatientSignup = () => {
 
         if (consentError) throw consentError;
 
-        // In a production environment, you would use a secure payment processor
-        // like Stripe instead of storing sensitive payment info directly
-        
         toast({
           title: "Registration Successful",
           description: "Your account has been created successfully!",
         });
 
-        // Redirect to patient dashboard
         navigate("/");
       }
     } catch (error) {

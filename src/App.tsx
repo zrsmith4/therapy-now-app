@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,44 +10,15 @@ import Appointments from "./pages/Appointments";
 import NotFound from "./pages/NotFound";
 import PatientSignup from "./pages/PatientSignup";
 import TherapistSignup from "./pages/TherapistSignup";
-import { useEffect, useState } from "react";
-import { Button } from "./components/ui/button";
-
-// Check if Supabase credentials are available
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
-const supabaseConfigured = supabaseUrl && supabaseKey;
 
 const queryClient = new QueryClient();
 
 const App = () => {
-  const [showSupabaseWarning, setShowSupabaseWarning] = useState(!supabaseConfigured);
-  
-  useEffect(() => {
-    // Check if credentials are available after a delay (in case they're being set)
-    const timer = setTimeout(() => {
-      if (!supabaseConfigured) {
-        console.warn("Supabase credentials are not configured. Some features may not work properly.");
-      } else {
-        setShowSupabaseWarning(false);
-      }
-    }, 2000);
-    
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        {showSupabaseWarning && (
-          <div className="fixed top-0 left-0 right-0 bg-yellow-100 p-4 z-50 text-center">
-            <p className="text-yellow-800">
-              Supabase is not configured properly. Please check your environment variables.
-            </p>
-          </div>
-        )}
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
