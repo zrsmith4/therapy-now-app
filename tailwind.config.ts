@@ -61,7 +61,25 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+                // Healthcare theme colors
+                medical: {
+                    primary: '#1E88E5', // Primary blue
+                    secondary: '#26A69A', // Teal accent
+                    tertiary: '#5E35B1', // Purple for contrast
+                    light: '#E3F2FD', // Light blue for backgrounds
+                    dark: '#1565C0', // Darker blue for emphasis
+                    success: '#43A047', // Green for success states
+                    warning: '#FFA000', // Amber for warnings
+                    danger: '#E53935', // Red for errors/danger
+                    gray: '#607D8B', // Blue-gray for neutral elements
+                    lightGray: '#ECEFF1' // Light gray for subtle backgrounds
+                },
+                location: {
+                    mobile: '#26A69A', // Teal for mobile visits
+                    clinic: '#5E35B1', // Purple for clinic visits
+                    virtual: '#1E88E5'  // Blue for virtual visits
+                }
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
