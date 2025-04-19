@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,18 +26,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowRight, ArrowLeft, FileText, Check } from "lucide-react";
-import { createClient } from "@supabase/supabase-js";
-
-// Get Supabase URL and Key from environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
-
-// Check if Supabase credentials are available
-if (!supabaseUrl || !supabaseKey) {
-  console.error("Supabase credentials are missing. Please check your environment variables.");
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabase } from "@/integrations/supabase/client";
+import { StepIndicator } from "@/components/signup/StepIndicator";
 
 const TherapistSignup = () => {
   const { toast } = useToast();
@@ -50,7 +39,6 @@ const TherapistSignup = () => {
     agreements: null,
   });
   
-  // Step 1: Personal Information Form
   const personalInfoSchema = z.object({
     email: z.string().email({ message: "Please enter a valid email address" }),
     password: z.string().min(8, { message: "Password must be at least 8 characters" }),
@@ -63,7 +51,6 @@ const TherapistSignup = () => {
     zipCode: z.string().min(1, { message: "Zip code is required" }),
   });
 
-  // Step 2: Professional Information Form
   const professionalInfoSchema = z.object({
     licenseNumber: z.string().min(1, { message: "License number is required" }),
     licenseState: z.string().min(1, { message: "License state is required" }),
@@ -77,7 +64,6 @@ const TherapistSignup = () => {
     hasMobileTreatmentEquipment: z.boolean().optional(),
   });
 
-  // Step 3: Agreements
   const agreementsSchema = z.object({
     revenueSharing: z.boolean().refine(val => val === true, {
       message: "You must agree to the revenue sharing agreement",
@@ -148,7 +134,6 @@ const TherapistSignup = () => {
     setFormData(prev => ({ ...prev, agreements: data }));
     
     try {
-      // First create the user account with Supabase
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.personalInfo?.email,
         password: formData.personalInfo?.password,
@@ -157,7 +142,6 @@ const TherapistSignup = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Create therapist profile in database
         const { error: profileError } = await supabase
           .from('therapists')
           .insert([
@@ -195,7 +179,6 @@ const TherapistSignup = () => {
           description: "Your account has been created successfully!",
         });
 
-        // Redirect to therapist dashboard
         navigate("/therapist-dashboard");
       }
     } catch (error) {
@@ -208,39 +191,12 @@ const TherapistSignup = () => {
     }
   };
 
-  const renderStepIndicator = () => {
-    return (
-      <div className="flex justify-center mb-8">
-        <div className="flex items-center space-x-2">
-          {[1, 2, 3].map((s) => (
-            <React.Fragment key={s}>
-              <div 
-                className={`rounded-full h-10 w-10 flex items-center justify-center border-2 
-                  ${step === s 
-                    ? "border-medical-primary bg-medical-light text-medical-primary" 
-                    : step > s 
-                      ? "border-medical-primary bg-medical-primary text-white"
-                      : "border-gray-300 text-gray-300"
-                  }`}
-              >
-                {step > s ? <Check className="h-5 w-5" /> : s}
-              </div>
-              {s < 3 && (
-                <div className={`w-10 h-1 ${step > s ? "bg-medical-primary" : "bg-gray-300"}`}></div>
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="container max-w-3xl py-10">
       <h1 className="text-3xl font-bold text-center mb-2">Physical Therapist Registration</h1>
       <p className="text-slate-500 text-center mb-8">Join our platform to connect with patients</p>
       
-      {renderStepIndicator()}
+      <StepIndicator currentStep={step} />
       
       {step === 1 && (
         <Card>
