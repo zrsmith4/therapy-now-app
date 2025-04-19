@@ -9,7 +9,129 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      patient_consents: {
+        Row: {
+          consent_date: string
+          created_at: string | null
+          financial_policy: boolean
+          hipaa_consent: boolean
+          id: string
+          no_show_policy: boolean
+          treatment_consent: boolean
+          user_id: string
+        }
+        Insert: {
+          consent_date?: string
+          created_at?: string | null
+          financial_policy?: boolean
+          hipaa_consent?: boolean
+          id?: string
+          no_show_policy?: boolean
+          treatment_consent?: boolean
+          user_id: string
+        }
+        Update: {
+          consent_date?: string
+          created_at?: string | null
+          financial_policy?: boolean
+          hipaa_consent?: boolean
+          id?: string
+          no_show_policy?: boolean
+          treatment_consent?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
+      patient_medical_history: {
+        Row: {
+          created_at: string | null
+          current_medications: string | null
+          id: string
+          injury_location: string
+          pain_level: string
+          physician_contact: string | null
+          physician_name: string | null
+          physician_referral: boolean
+          previous_treatment: string | null
+          primary_concern: string
+          surgical_history: string | null
+          treatment_goal: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_medications?: string | null
+          id?: string
+          injury_location: string
+          pain_level: string
+          physician_contact?: string | null
+          physician_name?: string | null
+          physician_referral?: boolean
+          previous_treatment?: string | null
+          primary_concern: string
+          surgical_history?: string | null
+          treatment_goal: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_medications?: string | null
+          id?: string
+          injury_location?: string
+          pain_level?: string
+          physician_contact?: string | null
+          physician_name?: string | null
+          physician_referral?: boolean
+          previous_treatment?: string | null
+          primary_concern?: string
+          surgical_history?: string | null
+          treatment_goal?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      patients: {
+        Row: {
+          address: string
+          city: string
+          created_at: string | null
+          date_of_birth: string
+          first_name: string
+          id: string
+          last_name: string
+          phone: string
+          state: string
+          user_id: string
+          zip_code: string
+        }
+        Insert: {
+          address: string
+          city: string
+          created_at?: string | null
+          date_of_birth: string
+          first_name: string
+          id?: string
+          last_name: string
+          phone: string
+          state: string
+          user_id: string
+          zip_code: string
+        }
+        Update: {
+          address?: string
+          city?: string
+          created_at?: string | null
+          date_of_birth?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          phone?: string
+          state?: string
+          user_id?: string
+          zip_code?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

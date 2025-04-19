@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -198,8 +198,8 @@ const PatientSignup = () => {
     
     try {
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.personalInfo?.email,
-        password: formData.personalInfo?.password,
+        email: formData.personalInfo?.email || '',
+        password: formData.personalInfo?.password || '',
       });
 
       if (authError) throw authError;
@@ -207,54 +207,48 @@ const PatientSignup = () => {
       if (authData.user) {
         const { error: profileError } = await supabase
           .from('patients')
-          .insert([
-            {
-              user_id: authData.user.id,
-              first_name: formData.personalInfo?.firstName,
-              last_name: formData.personalInfo?.lastName,
-              phone: formData.personalInfo?.phone,
-              date_of_birth: formData.personalInfo?.dateOfBirth,
-              address: formData.personalInfo?.address,
-              city: formData.personalInfo?.city,
-              state: formData.personalInfo?.state,
-              zip_code: formData.personalInfo?.zipCode,
-            }
-          ]);
+          .insert([{
+            user_id: authData.user.id,
+            first_name: formData.personalInfo?.firstName,
+            last_name: formData.personalInfo?.lastName,
+            phone: formData.personalInfo?.phone,
+            date_of_birth: formData.personalInfo?.dateOfBirth,
+            address: formData.personalInfo?.address,
+            city: formData.personalInfo?.city,
+            state: formData.personalInfo?.state,
+            zip_code: formData.personalInfo?.zipCode,
+          }]);
 
         if (profileError) throw profileError;
 
         const { error: medicalError } = await supabase
           .from('patient_medical_history')
-          .insert([
-            {
-              user_id: authData.user.id,
-              primary_concern: formData.medicalHistory?.primaryConcern,
-              pain_level: formData.medicalHistory?.painLevel,
-              injury_location: formData.medicalHistory?.injuryLocation,
-              previous_treatment: formData.medicalHistory?.previousTreatment,
-              current_medications: formData.medicalHistory?.currentMedications,
-              surgical_history: formData.medicalHistory?.surgicalHistory,
-              treatment_goal: formData.medicalHistory?.treatmentGoal,
-              physician_referral: formData.medicalHistory?.physicianReferral,
-              physician_name: formData.medicalHistory?.physicianName,
-              physician_contact: formData.medicalHistory?.physicianContact,
-            }
-          ]);
+          .insert([{
+            user_id: authData.user.id,
+            primary_concern: formData.medicalHistory?.primaryConcern,
+            pain_level: formData.medicalHistory?.painLevel,
+            injury_location: formData.medicalHistory?.injuryLocation,
+            previous_treatment: formData.medicalHistory?.previousTreatment,
+            current_medications: formData.medicalHistory?.currentMedications,
+            surgical_history: formData.medicalHistory?.surgicalHistory,
+            treatment_goal: formData.medicalHistory?.treatmentGoal,
+            physician_referral: formData.medicalHistory?.physicianReferral,
+            physician_name: formData.medicalHistory?.physicianName,
+            physician_contact: formData.medicalHistory?.physicianContact,
+          }]);
 
         if (medicalError) throw medicalError;
 
         const { error: consentError } = await supabase
           .from('patient_consents')
-          .insert([
-            {
-              user_id: authData.user.id,
-              treatment_consent: formData.consentForms?.treatmentConsent,
-              financial_policy: formData.consentForms?.financialPolicy,
-              no_show_policy: formData.consentForms?.noShowPolicy,
-              hipaa_consent: formData.consentForms?.hipaaConsent,
-              consent_date: new Date().toISOString(),
-            }
-          ]);
+          .insert([{
+            user_id: authData.user.id,
+            treatment_consent: formData.consentForms?.treatmentConsent,
+            financial_policy: formData.consentForms?.financialPolicy,
+            no_show_policy: formData.consentForms?.noShowPolicy,
+            hipaa_consent: formData.consentForms?.hipaaConsent,
+            consent_date: new Date().toISOString(),
+          }]);
 
         if (consentError) throw consentError;
 
