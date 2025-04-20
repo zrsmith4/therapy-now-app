@@ -132,6 +132,90 @@ export type Database = {
         }
         Relationships: []
       }
+      therapists: {
+        Row: {
+          address: string
+          agreement_date: string
+          bio: string
+          certifications: string | null
+          city: string
+          created_at: string | null
+          education: string
+          equipment_verification: boolean
+          first_name: string
+          has_mobile_equipment: boolean | null
+          has_needling_certification: boolean | null
+          id: string
+          insurance_verification: boolean
+          last_name: string
+          license_number: string
+          license_state: string
+          licensing_agreed: boolean
+          phone: string
+          revenue_sharing_agreed: boolean
+          service_options: string[]
+          specialties: string[]
+          state: string
+          user_id: string
+          years_of_experience: string
+          zip_code: string
+        }
+        Insert: {
+          address: string
+          agreement_date: string
+          bio: string
+          certifications?: string | null
+          city: string
+          created_at?: string | null
+          education: string
+          equipment_verification: boolean
+          first_name: string
+          has_mobile_equipment?: boolean | null
+          has_needling_certification?: boolean | null
+          id?: string
+          insurance_verification: boolean
+          last_name: string
+          license_number: string
+          license_state: string
+          licensing_agreed: boolean
+          phone: string
+          revenue_sharing_agreed: boolean
+          service_options: string[]
+          specialties: string[]
+          state: string
+          user_id: string
+          years_of_experience: string
+          zip_code: string
+        }
+        Update: {
+          address?: string
+          agreement_date?: string
+          bio?: string
+          certifications?: string | null
+          city?: string
+          created_at?: string | null
+          education?: string
+          equipment_verification?: boolean
+          first_name?: string
+          has_mobile_equipment?: boolean | null
+          has_needling_certification?: boolean | null
+          id?: string
+          insurance_verification?: boolean
+          last_name?: string
+          license_number?: string
+          license_state?: string
+          licensing_agreed?: boolean
+          phone?: string
+          revenue_sharing_agreed?: boolean
+          service_options?: string[]
+          specialties?: string[]
+          state?: string
+          user_id?: string
+          years_of_experience?: string
+          zip_code?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -69,10 +69,9 @@ export const useTherapistSignup = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Note: We need to create a therapists table in Supabase before this will work
         const { error: profileError } = await supabase
           .from('therapists')
-          .insert([{
+          .insert({
             user_id: authData.user.id,
             first_name: formData.personalInfo?.firstName,
             last_name: formData.personalInfo?.lastName,
@@ -96,7 +95,7 @@ export const useTherapistSignup = () => {
             licensing_agreed: agreementsData.licensingAgreement,
             insurance_verification: agreementsData.insuranceVerification,
             agreement_date: new Date().toISOString(),
-          }]);
+          });
 
         if (profileError) throw profileError;
         
