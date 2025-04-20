@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { format, addDays } from "date-fns";
@@ -54,11 +55,14 @@ const TherapistScheduleCalendar = ({ userId }: TherapistScheduleCalendarProps) =
           .maybeSingle();
         if (error) throw error;
         if (data?.time_slots) {
-          setTimeSlots(data.time_slots);
+          // Ensure the data is properly cast to TimeSlot[] before setting state
+          const fetchedTimeSlots = data.time_slots as TimeSlot[];
+          setTimeSlots(fetchedTimeSlots);
         } else {
           setTimeSlots(defaultTimeSlots);
         }
       } catch (err) {
+        console.error("Error fetching schedule:", err);
         setTimeSlots(defaultTimeSlots);
       }
     }

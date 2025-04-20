@@ -13,10 +13,12 @@ import PatientSignup from "./pages/PatientSignup";
 import TherapistSignup from "./pages/TherapistSignup";
 import TherapistProfile from "./pages/TherapistProfile";
 import PatientProfile from "./pages/PatientProfile";
-
-const queryClient = new QueryClient();
+import { useState } from "react";
 
 const App = () => {
+  // Create a new QueryClient instance within the component
+  const [queryClient] = useState(() => new QueryClient());
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
