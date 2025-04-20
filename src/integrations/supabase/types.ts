@@ -101,6 +101,7 @@ export type Database = {
           last_name: string
           phone: string
           state: string
+          travel_distance: number | null
           user_id: string
           zip_code: string
         }
@@ -114,6 +115,7 @@ export type Database = {
           last_name: string
           phone: string
           state: string
+          travel_distance?: number | null
           user_id: string
           zip_code: string
         }
@@ -127,8 +129,72 @@ export type Database = {
           last_name?: string
           phone?: string
           state?: string
+          travel_distance?: number | null
           user_id?: string
           zip_code?: string
+        }
+        Relationships: []
+      }
+      therapist_payment_info: {
+        Row: {
+          account_holder_name: string
+          account_number: string
+          account_type: string
+          bank_name: string
+          created_at: string | null
+          id: string
+          routing_number: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          account_holder_name: string
+          account_number: string
+          account_type: string
+          bank_name: string
+          created_at?: string | null
+          id?: string
+          routing_number: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          account_holder_name?: string
+          account_number?: string
+          account_type?: string
+          bank_name?: string
+          created_at?: string | null
+          id?: string
+          routing_number?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      therapist_schedules: {
+        Row: {
+          created_at: string | null
+          date: string
+          id: string
+          time_slots: Json
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          id?: string
+          time_slots: Json
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          id?: string
+          time_slots?: Json
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -156,6 +222,7 @@ export type Database = {
           service_options: string[]
           specialties: string[]
           state: string
+          travel_distance: number | null
           user_id: string
           years_of_experience: string
           zip_code: string
@@ -183,6 +250,7 @@ export type Database = {
           service_options: string[]
           specialties: string[]
           state: string
+          travel_distance?: number | null
           user_id: string
           years_of_experience: string
           zip_code: string
@@ -210,6 +278,7 @@ export type Database = {
           service_options?: string[]
           specialties?: string[]
           state?: string
+          travel_distance?: number | null
           user_id?: string
           years_of_experience?: string
           zip_code?: string

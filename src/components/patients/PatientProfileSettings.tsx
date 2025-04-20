@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DistancePreferenceSelector from "@/components/common/DistancePreferenceSelector";
@@ -27,13 +26,11 @@ const PatientProfileSettings = ({ userId }: PatientSettingsProps) => {
           .from('patients')
           .select('travel_distance')
           .eq('user_id', userId)
-          .single();
+          .maybeSingle();
         
-        if (error && error.code !== 'PGRST116') {
-          throw error;
-        }
+        if (error) throw error;
         
-        if (data?.travel_distance) {
+        if (typeof data?.travel_distance === "number") {
           setDistance(data.travel_distance);
         }
       } catch (error) {

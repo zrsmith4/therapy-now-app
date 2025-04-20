@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { format, addDays } from "date-fns";
@@ -41,14 +40,27 @@ const TherapistScheduleCalendar = ({ userId }: TherapistScheduleCalendarProps) =
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>(defaultTimeSlots);
   const [showTimeSlots, setShowTimeSlots] = useState(false);
 
-  // In a real implementation, you would fetch the schedule from the database
-  const handleDateSelect = (selectedDate: Date | undefined) => {
+  const handleDateSelect = async (selectedDate: Date | undefined) => {
     setDate(selectedDate);
     if (selectedDate) {
       setShowTimeSlots(true);
-      // Here you would fetch the time slots for this date from the database
-      // For now, we'll just use the default time slots
-      setTimeSlots(defaultTimeSlots);
+      const formattedDate = format(selectedDate, "yyyy-MM-dd");
+      try {
+        const { data, error } = await supabase
+          .from('therapist_schedules')
+          .select('time_slots')
+          .eq('user_id', userId)
+          .eq('date', formattedDate)
+          .maybeSingle();
+        if (error) throw error;
+        if (data?.time_slots) {
+          setTimeSlots(data.time_slots);
+        } else {
+          setTimeSlots(defaultTimeSlots);
+        }
+      } catch (err) {
+        setTimeSlots(defaultTimeSlots);
+      }
     }
   };
 
@@ -60,12 +72,8 @@ const TherapistScheduleCalendar = ({ userId }: TherapistScheduleCalendarProps) =
 
   const saveSchedule = async () => {
     if (!date) return;
-    
     try {
       const formattedDate = format(date, "yyyy-MM-dd");
-      
-      // This is a simplified version - in a real app, you'd want to handle
-      // conflicts and existing schedules differently
       const { error } = await supabase
         .from('therapist_schedules')
         .upsert({
@@ -73,10 +81,8 @@ const TherapistScheduleCalendar = ({ userId }: TherapistScheduleCalendarProps) =
           date: formattedDate,
           time_slots: timeSlots,
           updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id, date' });
-        
+        }, { onConflict: 'user_id,date' });
       if (error) throw error;
-      
       toast({
         title: "Schedule saved",
         description: `Your schedule for ${format(date, "MMMM d, yyyy")} has been saved.`,
@@ -92,7 +98,6 @@ const TherapistScheduleCalendar = ({ userId }: TherapistScheduleCalendarProps) =
   };
 
   const handleSetRecurringSchedule = () => {
-    // This would open a modal or form to set a recurring schedule
     toast({
       title: "Coming Soon",
       description: "Setting recurring schedules will be available in a future update.",

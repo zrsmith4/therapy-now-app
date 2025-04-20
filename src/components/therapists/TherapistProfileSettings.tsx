@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BankInfoForm from "@/components/therapists/BankInfoForm";
@@ -7,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import TherapistScheduleCalendar from "@/components/therapists/TherapistScheduleCalendar";
 
 type TherapistSettingsProps = {
   userId: string;
@@ -23,33 +23,29 @@ const TherapistProfileSettings = ({ userId }: TherapistSettingsProps) => {
     const loadTherapistSettings = async () => {
       try {
         setLoading(true);
-        
+
         // Load distance preference
         const { data: therapistData, error: therapistError } = await supabase
           .from('therapists')
           .select('travel_distance')
           .eq('user_id', userId)
-          .single();
-        
-        if (therapistError && therapistError.code !== 'PGRST116') {
-          throw therapistError;
-        }
-        
-        if (therapistData?.travel_distance) {
+          .maybeSingle();
+
+        if (therapistError) throw therapistError;
+
+        if (typeof therapistData?.travel_distance === "number") {
           setDistance(therapistData.travel_distance);
         }
-        
+
         // Load payment info
         const { data: paymentData, error: paymentError } = await supabase
           .from('therapist_payment_info')
           .select('*')
           .eq('user_id', userId)
-          .single();
-          
-        if (paymentError && paymentError.code !== 'PGRST116') {
-          throw paymentError;
-        }
-        
+          .maybeSingle();
+
+        if (paymentError) throw paymentError;
+
         if (paymentData) {
           setPaymentInfo({
             accountHolderName: paymentData.account_holder_name,
@@ -70,21 +66,21 @@ const TherapistProfileSettings = ({ userId }: TherapistSettingsProps) => {
         setLoading(false);
       }
     };
-    
+
     if (userId) {
       loadTherapistSettings();
     }
   }, [userId, toast]);
-  
+
   const saveDistancePreference = async () => {
     try {
       const { error } = await supabase
         .from('therapists')
         .update({ travel_distance: distance })
         .eq('user_id', userId);
-        
+
       if (error) throw error;
-      
+
       toast({
         title: 'Distance preference saved',
         description: 'Your travel distance preference has been updated.',
@@ -98,7 +94,7 @@ const TherapistProfileSettings = ({ userId }: TherapistSettingsProps) => {
       });
     }
   };
-  
+
   if (loading) {
     return <div className="p-8 text-center">Loading your profile settings...</div>;
   }
@@ -106,21 +102,18 @@ const TherapistProfileSettings = ({ userId }: TherapistSettingsProps) => {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Profile Settings</h2>
-      
       <Tabs defaultValue="payment">
         <TabsList className="mb-6">
           <TabsTrigger value="payment">Payment Information</TabsTrigger>
           <TabsTrigger value="distance">Distance Preferences</TabsTrigger>
           <TabsTrigger value="schedule">Schedule</TabsTrigger>
         </TabsList>
-        
         <TabsContent value="payment">
-          <BankInfoForm 
-            userId={userId} 
+          <BankInfoForm
+            userId={userId}
             existingData={paymentInfo}
           />
         </TabsContent>
-        
         <TabsContent value="distance">
           <Card>
             <CardHeader>
@@ -141,7 +134,6 @@ const TherapistProfileSettings = ({ userId }: TherapistSettingsProps) => {
             </CardContent>
           </Card>
         </TabsContent>
-        
         <TabsContent value="schedule">
           <Card>
             <CardHeader>
