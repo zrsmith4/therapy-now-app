@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CalendarCheck, User, Filter, Clock } from "lucide-react"
 import QuickActionCard from '@/components/dashboard/QuickActionCard'
 import { useNavigate } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
+import { Link } from 'react-router-dom'
 
 // Demo user choice for preview
 const Index = () => {
@@ -50,13 +52,20 @@ const Index = () => {
               </div>
             </div>
             
-            <div className="mt-8">
-              <a
-                href="/signup"
-                className="inline-block bg-medical-primary text-white font-semibold py-2 px-6 rounded-lg hover:bg-medical-dark transition-colors"
+            <div className="mt-8 flex justify-center space-x-4">
+              <Button
+                asChild
+                className="bg-medical-primary text-white font-semibold py-2 px-6 rounded-lg hover:bg-medical-dark transition-colors"
               >
-                Sign Up
-              </a>
+                <Link to="/signup">Sign Up</Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="font-semibold py-2 px-6 rounded-lg border-medical-primary text-medical-primary hover:bg-medical-light transition-colors"
+              >
+                <Link to="/pricing">View Pricing</Link>
+              </Button>
             </div>
 
             <div className="mt-16">

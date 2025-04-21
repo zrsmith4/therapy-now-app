@@ -1,6 +1,9 @@
 
 import React from "react"
 import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { ArrowLeft } from "lucide-react"
+import { Link } from "react-router-dom"
 
 const VISIT_TYPES = [
   {
@@ -49,6 +52,18 @@ const PricingInfo = () => (
             </CardContent>
           </Card>
         ))}
+      </div>
+      
+      <div className="flex justify-center mt-10 space-x-4">
+        <Button asChild variant="outline" className="gap-2">
+          <Link to="/">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Home
+          </Link>
+        </Button>
+        <Button asChild>
+          <Link to="/signup">Sign Up</Link>
+        </Button>
       </div>
     </div>
   </div>

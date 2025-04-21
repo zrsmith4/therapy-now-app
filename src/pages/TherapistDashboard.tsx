@@ -6,8 +6,10 @@ import AvailabilityToggle from '@/components/therapists/AvailabilityToggle'
 import AppointmentCard from '@/components/appointments/AppointmentCard'
 import PatientNoteCard from '@/components/emr/PatientNoteCard'
 import { Button } from '@/components/ui/button'
-import { Calendar } from 'lucide-react'
+import { Calendar, Clock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import TherapistScheduleCalendar from '@/components/therapists/TherapistScheduleCalendar'
+import ScheduleOptionsSelector from '@/components/therapists/ScheduleOptionsSelector'
 
 // Demo appointment data
 const demoAppointments = [
@@ -67,13 +69,39 @@ const TherapistDashboard = () => {
   const navigate = useNavigate()
   const [isAvailable, setIsAvailable] = useState(false)
   const [tabValue, setTabValue] = useState("appointments");
+  const [availabilityTimeout, setAvailabilityTimeout] = useState<string | null>(null);
   
+  // Demo data for the dashboard
   const demoAppointment = {
     date: 'Tuesday, May 2',
     time: '10:00 AM',
     with: 'John Smith',
     locationType: 'clinic' as const
   }
+
+  // Handle availability toggle with optional timeout
+  const handleAvailabilityToggle = (value: boolean, duration?: string) => {
+    setIsAvailable(value);
+    setAvailabilityTimeout(duration || null);
+    
+    if (value && duration) {
+      // If a timeout is set, schedule turning off availability
+      const timeoutDurations: Record<string, number> = {
+        '30min': 30 * 60 * 1000,
+        '1hour': 60 * 60 * 1000,
+        '2hours': 2 * 60 * 60 * 1000,
+        '4hours': 4 * 60 * 60 * 1000,
+      };
+      
+      const timeoutDuration = timeoutDurations[duration];
+      if (timeoutDuration) {
+        setTimeout(() => {
+          setIsAvailable(false);
+          setAvailabilityTimeout(null);
+        }, timeoutDuration);
+      }
+    }
+  };
   
   return (
     <div className="min-h-screen bg-slate-50">
@@ -87,13 +115,14 @@ const TherapistDashboard = () => {
           userName="Sarah"
           userType="therapist"
           nextAppointment={demoAppointment}
-          onActionClick={() => navigate('/schedule')}
+          onActionClick={() => setTabValue("schedule")}
         />
         
         <div className="mb-8">
           <AvailabilityToggle
             isAvailable={isAvailable}
-            onToggle={setIsAvailable}
+            onToggle={handleAvailabilityToggle}
+            timeout={availabilityTimeout}
           />
         </div>
         
@@ -157,13 +186,11 @@ const TherapistDashboard = () => {
           <TabsContent value="schedule">
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <h2 className="text-xl font-semibold mb-4">Your Schedule</h2>
-              <p className="text-slate-500 mb-4">
-                Set your regular availability and schedule for advance booking
-              </p>
               
-              <div className="p-8 border rounded-lg bg-slate-50 text-center">
-                <p className="mb-4">Schedule calendar would be displayed here</p>
-                <Button>Set Regular Hours</Button>
+              <ScheduleOptionsSelector />
+              
+              <div className="mt-6">
+                <TherapistScheduleCalendar userId="demo-therapist-id" />
               </div>
               
               <div className="mt-6">
