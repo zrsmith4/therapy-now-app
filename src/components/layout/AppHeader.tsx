@@ -28,6 +28,9 @@ const AppHeader = ({ userType, userName }: AppHeaderProps) => {
         </div>
         
         <nav className="hidden md:flex items-center gap-6">
+          <Link to="/pricing" className="text-sm font-medium text-slate-700 hover:text-medical-primary transition-colors">
+            Pricing
+          </Link>
           {userType && (
             <>
               <Link to="/appointments" className="text-sm font-medium text-slate-700 hover:text-medical-primary transition-colors">
@@ -49,6 +52,9 @@ const AppHeader = ({ userType, userName }: AppHeaderProps) => {
                   </Link>
                   <Link to="/patients" className="text-sm font-medium text-slate-700 hover:text-medical-primary transition-colors">
                     My Patients
+                  </Link>
+                  <Link to="/therapist-dashboard" className="text-sm font-medium text-slate-700 hover:text-medical-primary transition-colors">
+                    Dashboard
                   </Link>
                 </>
               )}

@@ -27,7 +27,7 @@ const Index = () => {
             </p>
             
             <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
-              <div 
+              <div
                 className="rounded-lg p-8 bg-white shadow-md border-2 border-transparent hover:border-medical-primary cursor-pointer transition-all"
                 onClick={() => setUserType('patient')}
               >
@@ -38,7 +38,7 @@ const Index = () => {
                 </p>
               </div>
               
-              <div 
+              <div
                 className="rounded-lg p-8 bg-white shadow-md border-2 border-transparent hover:border-medical-tertiary cursor-pointer transition-all"
                 onClick={() => setUserType('therapist')}
               >
@@ -50,6 +50,15 @@ const Index = () => {
               </div>
             </div>
             
+            <div className="mt-8">
+              <a
+                href="/signup"
+                className="inline-block bg-medical-primary text-white font-semibold py-2 px-6 rounded-lg hover:bg-medical-dark transition-colors"
+              >
+                Sign Up
+              </a>
+            </div>
+
             <div className="mt-16">
               <h2 className="text-2xl font-bold mb-6">How It Works</h2>
               
@@ -212,5 +221,4 @@ const Index = () => {
     </div>
   )
 }
-
 export default Index

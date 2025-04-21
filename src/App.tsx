@@ -13,6 +13,8 @@ import PatientSignup from "./pages/PatientSignup";
 import TherapistSignup from "./pages/TherapistSignup";
 import TherapistProfile from "./pages/TherapistProfile";
 import PatientProfile from "./pages/PatientProfile";
+import PricingInfo from "./pages/PricingInfo";
+import SignUpChoice from "./pages/SignUpChoice";
 import { useState } from "react";
 
 const App = () => {
@@ -34,7 +36,8 @@ const App = () => {
             <Route path="/patients" element={<TherapistDashboard />} />
             <Route path="/therapist-profile" element={<TherapistProfile />} />
             <Route path="/patient-profile" element={<PatientProfile />} />
-            <Route path="/my-profile" element={<Index />} />
+            <Route path="/pricing" element={<PricingInfo />} />
+            <Route path="/signup" element={<SignUpChoice />} />
             <Route path="/patient-signup" element={<PatientSignup />} />
             <Route path="/therapist-signup" element={<TherapistSignup />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

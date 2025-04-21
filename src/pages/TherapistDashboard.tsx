@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react'
 import AppHeader from '@/components/layout/AppHeader'
 import WelcomeSection from '@/components/dashboard/WelcomeSection'
@@ -67,6 +66,7 @@ const demoPatientNotes = [
 const TherapistDashboard = () => {
   const navigate = useNavigate()
   const [isAvailable, setIsAvailable] = useState(false)
+  const [tabValue, setTabValue] = useState("appointments");
   
   const demoAppointment = {
     date: 'Tuesday, May 2',
@@ -97,11 +97,12 @@ const TherapistDashboard = () => {
           />
         </div>
         
-        <Tabs defaultValue="appointments">
+        <Tabs value={tabValue} onValueChange={setTabValue} defaultValue="appointments">
           <TabsList className="mb-6">
             <TabsTrigger value="appointments">Appointments</TabsTrigger>
             <TabsTrigger value="patients">Patient Notes</TabsTrigger>
             <TabsTrigger value="schedule">My Schedule</TabsTrigger>
+            <TabsTrigger value="payouts">Payouts & Stats</TabsTrigger>
           </TabsList>
           
           <TabsContent value="appointments">
@@ -190,6 +191,19 @@ const TherapistDashboard = () => {
                     <Button size="sm" className="mt-2 bg-medical-tertiary hover:bg-medical-tertiary/90">Enabled</Button>
                   </div>
                 </div>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="payouts">
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h2 className="text-xl font-semibold mb-4">Payouts & Stats</h2>
+              <p className="text-slate-500 mb-2">
+                Here you'll be able to review your pending payouts, stats, and completed sessions.
+              </p>
+              <div className="mt-4 p-6 rounded bg-medical-light text-center text-slate-700">
+                <p><span className="font-semibold">Coming soon!</span></p>
+                <p>This section will show payout amounts, past payouts, and session stats when Stripe payouts are connected.</p>
               </div>
             </div>
           </TabsContent>
