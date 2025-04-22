@@ -5,51 +5,60 @@ import AppHeader from '@/components/layout/AppHeader';
 import TherapistProfileSettings from '@/components/therapists/TherapistProfileSettings';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const TherapistProfile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [therapistName, setTherapistName] = useState('');
+  const [therapistData, setTherapistData] = useState<any>(null);
+  const [scheduleStats, setScheduleStats] = useState<any>(null);
 
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) throw error;
         
-        if (!data.session) {
-          // No active session, redirect to login
+        if (!session) {
           navigate('/login');
           return;
         }
         
-        setUserId(data.session.user.id);
+        setUserId(session.user.id);
         
         // Get therapist data
-        const { data: therapistData, error: therapistError } = await supabase
+        const { data: therapistInfo, error: therapistError } = await supabase
           .from('therapists')
-          .select('first_name, last_name')
-          .eq('user_id', data.session.user.id)
+          .select('*')
+          .eq('user_id', session.user.id)
           .single();
           
-        if (therapistError && therapistError.code !== 'PGRST116') {
-          throw therapistError;
-        }
+        if (therapistError) throw therapistError;
         
-        if (therapistData) {
-          setTherapistName(`${therapistData.first_name} ${therapistData.last_name}`);
-        }
+        setTherapistData(therapistInfo);
+
+        // Get schedule statistics
+        const { data: scheduleInfo, error: scheduleError } = await supabase
+          .from('therapist_schedules')
+          .select('*')
+          .eq('user_id', session.user.id);
+          
+        if (scheduleError) throw scheduleError;
+        
+        setScheduleStats({
+          totalSlots: scheduleInfo?.length || 0,
+          // Add more stats as needed
+        });
       } catch (error) {
-        console.error('Session check error:', error);
+        console.error('Profile load error:', error);
         toast({
           variant: 'destructive',
-          title: 'Authentication error',
-          description: 'Please log in to access your profile.',
+          title: 'Error loading profile',
+          description: 'Unable to load your profile information.',
         });
-        navigate('/login');
       } finally {
         setLoading(false);
       }
@@ -57,7 +66,7 @@ const TherapistProfile = () => {
     
     checkSession();
   }, [navigate, toast]);
-  
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading profile...</div>;
   }
@@ -65,12 +74,68 @@ const TherapistProfile = () => {
   return (
     <div className="min-h-screen bg-slate-50">
       <AppHeader 
-        userType="therapist" 
-        userName={therapistName || 'Therapist'}
+        userType="therapist"
+        userName={therapistData ? `${therapistData.first_name} ${therapistData.last_name}` : 'Therapist'}
       />
       
       <main className="container px-4 py-8">
-        {userId && <TherapistProfileSettings userId={userId} />}
+        {userId && therapistData && (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Profile Settings</h2>
+            
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Professional Summary</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium">Specialties</h4>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {therapistData.specialties.map((specialty: string, index: number) => (
+                          <span 
+                            key={index}
+                            className="bg-medical-light text-medical-primary px-2 py-1 rounded-full text-sm"
+                          >
+                            {specialty}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-medium">Experience</h4>
+                      <p className="text-gray-600">{therapistData.years_of_experience} years</p>
+                    </div>
+                    <div>
+                      <h4 className="font-medium">Education</h4>
+                      <p className="text-gray-600">{therapistData.education}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Schedule Overview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <p className="text-gray-600">
+                      You have {scheduleStats?.totalSlots || 0} upcoming available time slots.
+                    </p>
+                    {/* Add more schedule statistics as needed */}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <TherapistProfileSettings 
+              userId={userId}
+              initialData={therapistData}
+            />
+          </div>
+        )}
       </main>
     </div>
   );
