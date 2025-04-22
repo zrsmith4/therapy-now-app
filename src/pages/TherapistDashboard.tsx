@@ -111,6 +111,16 @@ const TherapistDashboard = () => {
       />
       
       <main className="container px-4 py-8">
+        {/* Temporary access to Documentation page */}
+        <div className="flex justify-end mb-6">
+          <Button
+            className="bg-medical-tertiary"
+            onClick={() => navigate('/therapist-documentation')}
+          >
+            Documentation
+          </Button>
+        </div>
+        
         <WelcomeSection
           userName="Sarah"
           userType="therapist"

@@ -16,6 +16,7 @@ import PricingInfo from "./pages/PricingInfo";
 import SignUpChoice from "./pages/SignUpChoice";
 import Profile from "./pages/Profile";
 import Messages from "./pages/Messages";
+import TherapistDocumentation from "./pages/TherapistDocumentation";
 import { useState } from "react";
 
 const App = () => {
@@ -42,6 +43,7 @@ const App = () => {
             <Route path="/patient-signup" element={<PatientSignup />} />
             <Route path="/therapist-signup" element={<TherapistSignup />} />
             <Route path="/messages" element={<Messages />} />
+            <Route path="/therapist-documentation" element={<TherapistDocumentation />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
