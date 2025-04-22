@@ -10,21 +10,22 @@ import TherapistScheduleCalendar from "@/components/therapists/TherapistSchedule
 
 type TherapistSettingsProps = {
   userId: string;
+  initialData?: any;
 };
 
-const TherapistProfileSettings = ({ userId }: TherapistSettingsProps) => {
+const TherapistProfileSettings = ({ userId, initialData }: TherapistSettingsProps) => {
   const { toast } = useToast();
-  const [distance, setDistance] = useState(15); // Default 15 miles
-  const [loading, setLoading] = useState(true);
+  const [distance, setDistance] = useState(initialData?.travel_distance || 15);
+  const [loading, setLoading] = useState(!initialData);
   const [paymentInfo, setPaymentInfo] = useState(null);
 
-  // Load therapist settings
   useEffect(() => {
+    if (initialData) return;
+
     const loadTherapistSettings = async () => {
       try {
         setLoading(true);
 
-        // Load distance preference
         const { data: therapistData, error: therapistError } = await supabase
           .from('therapists')
           .select('travel_distance')
@@ -37,7 +38,6 @@ const TherapistProfileSettings = ({ userId }: TherapistSettingsProps) => {
           setDistance(therapistData.travel_distance);
         }
 
-        // Load payment info
         const { data: paymentData, error: paymentError } = await supabase
           .from('therapist_payment_info')
           .select('*')
@@ -70,7 +70,7 @@ const TherapistProfileSettings = ({ userId }: TherapistSettingsProps) => {
     if (userId) {
       loadTherapistSettings();
     }
-  }, [userId, toast]);
+  }, [userId, toast, initialData]);
 
   const saveDistancePreference = async () => {
     try {

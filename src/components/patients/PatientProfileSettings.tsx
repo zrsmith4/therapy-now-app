@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DistancePreferenceSelector from "@/components/common/DistancePreferenceSelector";
@@ -9,15 +8,18 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 
 type PatientSettingsProps = {
   userId: string;
+  initialData?: any; // Added initialData prop
 };
 
-const PatientProfileSettings = ({ userId }: PatientSettingsProps) => {
+const PatientProfileSettings = ({ userId, initialData }: PatientSettingsProps) => {
   const { toast } = useToast();
-  const [distance, setDistance] = useState(25); // Default 25 miles
-  const [loading, setLoading] = useState(true);
+  const [distance, setDistance] = useState(initialData?.travel_distance || 25); // Use initialData if provided
+  const [loading, setLoading] = useState(!initialData); // Don't show loading if we have initialData
 
-  // Load patient settings
+  // Load patient settings only if we don't have initialData
   useEffect(() => {
+    if (initialData) return; // Skip loading if we have initialData
+    
     const loadPatientSettings = async () => {
       try {
         setLoading(true);
@@ -49,7 +51,7 @@ const PatientProfileSettings = ({ userId }: PatientSettingsProps) => {
     if (userId) {
       loadPatientSettings();
     }
-  }, [userId, toast]);
+  }, [userId, toast, initialData]);
   
   const saveDistancePreference = async () => {
     try {
