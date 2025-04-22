@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react'
 import AppHeader from '@/components/layout/AppHeader'
 import WelcomeSection from '@/components/dashboard/WelcomeSection'
@@ -8,8 +9,11 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Link } from 'react-router-dom'
 
+// Define the user type as a type to avoid string literal comparison issues
+type UserType = 'patient' | 'therapist' | null;
+
 const Index = () => {
-  const [userType, setUserType] = useState<'patient' | 'therapist' | null>(null)
+  const [userType, setUserType] = useState<UserType>(null)
   const navigate = useNavigate()
   
   const handleTherapistClick = () => {
