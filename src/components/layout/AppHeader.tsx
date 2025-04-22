@@ -1,4 +1,3 @@
-
 import React from 'react'
 import { Button } from "@/components/ui/button"
 import { Link } from "react-router-dom"
@@ -21,9 +20,8 @@ const AppHeader = ({ userType, userName }: AppHeaderProps) => {
       <div className="container flex h-16 items-center justify-between py-4">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center">
-            <span className="text-2xl font-bold text-medical-primary">Heal</span>
-            <span className="text-2xl font-bold text-medical-secondary">on</span>
-            <span className="text-2xl font-bold text-medical-tertiary">Wheels</span>
+            <span className="text-2xl font-bold text-medical-primary">Therapy</span>
+            <span className="text-2xl font-bold text-medical-secondary">Now</span>
           </Link>
         </div>
         
@@ -74,7 +72,10 @@ const AppHeader = ({ userType, userName }: AppHeaderProps) => {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem className="font-medium">{userName || 'User'}</DropdownMenuItem>
                 <DropdownMenuItem>
-                  <Link to="/my-profile" className="w-full">Profile</Link>
+                  <Link to={`/${userType}-profile`} className="w-full">Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Link to="/messages" className="w-full">Messages</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Link to="/settings" className="w-full">Settings</Link>

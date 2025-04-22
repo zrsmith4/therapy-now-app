@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,10 +14,11 @@ import TherapistProfile from "./pages/TherapistProfile";
 import PatientProfile from "./pages/PatientProfile";
 import PricingInfo from "./pages/PricingInfo";
 import SignUpChoice from "./pages/SignUpChoice";
+import Profile from "./pages/Profile";
+import Messages from "./pages/Messages";
 import { useState } from "react";
 
 const App = () => {
-  // Create a new QueryClient instance within the component
   const [queryClient] = useState(() => new QueryClient());
 
   return (
@@ -36,11 +36,12 @@ const App = () => {
             <Route path="/patients" element={<TherapistDashboard />} />
             <Route path="/therapist-profile" element={<TherapistProfile />} />
             <Route path="/patient-profile" element={<PatientProfile />} />
+            <Route path="/my-profile" element={<Profile />} />
             <Route path="/pricing" element={<PricingInfo />} />
             <Route path="/signup" element={<SignUpChoice />} />
             <Route path="/patient-signup" element={<PatientSignup />} />
             <Route path="/therapist-signup" element={<TherapistSignup />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/messages" element={<Messages />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

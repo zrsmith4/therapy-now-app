@@ -1,15 +1,49 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 const Profile = () => {
   const navigate = useNavigate();
   
-  // Redirect based on user type
-  React.useEffect(() => {
-    // For now, redirect to patient profile
-    // In a real app, this would check auth status and user type
-    navigate('/patient-profile');
+  useEffect(() => {
+    const checkUserType = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        navigate('/login');
+        return;
+      }
+
+      // Check if user is a patient
+      const { data: patientData } = await supabase
+        .from('patients')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+
+      if (patientData) {
+        navigate('/patient-profile');
+        return;
+      }
+
+      // Check if user is a therapist
+      const { data: therapistData } = await supabase
+        .from('therapists')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+
+      if (therapistData) {
+        navigate('/therapist-profile');
+        return;
+      }
+
+      // If neither, redirect to home
+      navigate('/');
+    };
+
+    checkUserType();
   }, [navigate]);
 
   return null;

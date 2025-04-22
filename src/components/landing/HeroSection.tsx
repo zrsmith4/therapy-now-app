@@ -6,8 +6,9 @@ import { Link } from 'react-router-dom';
 const HeroSection = () => {
   return (
     <div className="max-w-4xl mx-auto text-center">
-      <h1 className="text-4xl font-bold mb-6 text-medical-primary">
-        Heal<span className="text-medical-secondary">on</span><span className="text-medical-tertiary">Wheels</span>
+      <h1 className="text-4xl font-bold mb-6">
+        <span className="text-medical-primary">Therapy</span>
+        <span className="text-medical-secondary">Now</span>
       </h1>
       <p className="text-xl text-slate-600 mb-12">
         On-demand physical therapy when and where you need it
