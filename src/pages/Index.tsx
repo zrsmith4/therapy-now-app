@@ -213,7 +213,13 @@ const Index = () => {
               <p className="text-slate-500">You have no upcoming appointments scheduled.</p>
               
               <button 
-                onClick={() => userType === 'patient' ? navigate('/find-therapist') : navigate('/schedule')}
+                onClick={() => {
+                  if (userType === 'patient') {
+                    navigate('/find-therapist') 
+                  } else { 
+                    navigate('/schedule')
+                  }
+                }}
                 className="mt-4 text-medical-primary font-medium hover:underline"
               >
                 {userType === 'patient' ? 'Find a therapist' : 'Set your availability'}
