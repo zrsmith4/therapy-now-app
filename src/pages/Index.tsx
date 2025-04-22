@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react'
 import AppHeader from '@/components/layout/AppHeader'
 import WelcomeSection from '@/components/dashboard/WelcomeSection'
@@ -9,10 +8,13 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Link } from 'react-router-dom'
 
-// Demo user choice for preview
 const Index = () => {
   const [userType, setUserType] = useState<'patient' | 'therapist' | null>(null)
   const navigate = useNavigate()
+  
+  const handleTherapistClick = () => {
+    navigate('/login', { state: { userType: 'therapist' } })
+  }
   
   if (!userType) {
     return (
@@ -42,7 +44,7 @@ const Index = () => {
               
               <div
                 className="rounded-lg p-8 bg-white shadow-md border-2 border-transparent hover:border-medical-tertiary cursor-pointer transition-all"
-                onClick={() => setUserType('therapist')}
+                onClick={handleTherapistClick}
               >
                 <User className="w-12 h-12 text-medical-tertiary mb-4 mx-auto" />
                 <h2 className="text-xl font-bold mb-2">I'm a Therapist</h2>
@@ -109,7 +111,11 @@ const Index = () => {
     )
   }
   
-  // Demo data
+  if (userType === 'therapist') {
+    navigate('/login', { state: { userType: 'therapist' } });
+    return null;
+  }
+  
   const demoAppointment = {
     date: 'Tuesday, May 2',
     time: '10:00 AM',
@@ -204,7 +210,6 @@ const Index = () => {
           <TabsContent value="appointments">
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <h2 className="text-xl font-semibold mb-4">Your Upcoming Appointments</h2>
-              {/* Appointment content would go here */}
               <p className="text-slate-500">You have no upcoming appointments scheduled.</p>
               
               <button 
@@ -220,7 +225,6 @@ const Index = () => {
             <TabsContent value="patients">
               <div className="bg-white rounded-lg p-6 shadow-sm">
                 <h2 className="text-xl font-semibold mb-4">Your Patients</h2>
-                {/* Patient list would go here */}
                 <p className="text-slate-500">You don't have any patients yet.</p>
               </div>
             </TabsContent>
@@ -230,4 +234,5 @@ const Index = () => {
     </div>
   )
 }
+
 export default Index
