@@ -78,12 +78,12 @@ const AvailabilityToggle = ({ isAvailable, onToggle, timeout }: AvailabilityTogg
             {isAvailable && (
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-slate-400" />
-                <Select onValueChange={handleTimeoutChange} value={timeout || ''}>
+                <Select onValueChange={handleTimeoutChange} value={timeout || 'none'}>
                   <SelectTrigger className="w-[140px]">
                     <SelectValue placeholder="Set timeout" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No timeout</SelectItem>
+                    <SelectItem value="none">No timeout</SelectItem>
                     <SelectItem value="30min">30 minutes</SelectItem>
                     <SelectItem value="1hour">1 hour</SelectItem>
                     <SelectItem value="2hours">2 hours</SelectItem>
