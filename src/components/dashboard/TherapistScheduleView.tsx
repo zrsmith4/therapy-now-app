@@ -1,20 +1,25 @@
-
 import React from 'react';
 import TherapistScheduleCalendar from '@/components/therapists/TherapistScheduleCalendar';
 import ScheduleOptionsSelector from '@/components/therapists/ScheduleOptionsSelector';
 import { Button } from '@/components/ui/button';
+import AvailabilityManager from '@/components/therapists/AvailabilityManager';
 
 const TherapistScheduleView = () => {
   return (
-    <div className="bg-white rounded-lg p-6 shadow-sm">
-      <h2 className="text-xl font-semibold mb-4">Your Schedule</h2>
-      
-      <ScheduleOptionsSelector />
-      
-      <div className="mt-6">
-        <TherapistScheduleCalendar userId="demo-therapist-id" />
+    <div className="space-y-8">
+      <div className="bg-white rounded-lg p-6 shadow-sm">
+        <h2 className="text-xl font-semibold mb-4">Set Your Availability</h2>
+        <AvailabilityManager />
       </div>
-      
+
+      <div className="bg-white rounded-lg p-6 shadow-sm">
+        <h2 className="text-xl font-semibold mb-4">Your Schedule</h2>
+        <ScheduleOptionsSelector />
+        <div className="mt-6">
+          <TherapistScheduleCalendar userId="demo-therapist-id" />
+        </div>
+      </div>
+
       <div className="mt-6">
         <h3 className="text-lg font-medium mb-2">Location Preferences</h3>
         <p className="text-slate-500 mb-4">
