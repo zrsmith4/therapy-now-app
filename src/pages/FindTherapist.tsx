@@ -22,6 +22,22 @@ const DEFAULT_TIME_SLOTS = [
   "14:00", "15:00", "16:00", "17:00"
 ];
 
+// Define the time slot interface to match our data structure
+interface TimeSlot {
+  start_time: string;
+  end_time: string;
+  is_recurring: boolean;
+  day_of_week?: number | null;
+  is_available: boolean;
+  therapist_id: string;
+}
+
+// Define schedule interface
+interface TherapistSchedule {
+  user_id: string;
+  time_slots: TimeSlot[] | null;
+}
+
 const FindTherapist = () => {
   const navigate = useNavigate();
   const [locationPreference, setLocationPreference] = useState<'mobile' | 'clinic' | 'virtual'>('mobile');
@@ -58,9 +74,18 @@ const FindTherapist = () => {
       // Filter therapists with availability at the requested time
       // This is a client-side filtering approach until we can use the server-side function
       const availableTherapistIds = (therapistSchedules || [])
-        .filter(schedule => {
-          const slots = schedule.time_slots || [];
-          return slots.some((slot: any) => {
+        .filter((schedule: TherapistSchedule) => {
+          // Check if time_slots is an array
+          if (!Array.isArray(schedule.time_slots)) {
+            return false;
+          }
+          
+          return schedule.time_slots.some((slot: TimeSlot) => {
+            // Make sure we have valid start and end times
+            if (!slot.start_time || !slot.end_time) {
+              return false;
+            }
+            
             const slotStartTime = new Date(slot.start_time);
             const slotEndTime = new Date(slot.end_time);
             return datetime >= slotStartTime && datetime < slotEndTime;
