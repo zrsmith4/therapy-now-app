@@ -97,8 +97,9 @@ const FindTherapist = () => {
               return false;
             }
             
-            // Now that we've verified the shape, we can treat it as a TimeSlot
-            const slot = slotData as TimeSlot;
+            // Now that we've verified the shape, we can safely cast it as TimeSlot
+            // First cast to unknown, then to TimeSlot as recommended by the error message
+            const slot = slotData as unknown as TimeSlot;
             
             // Make sure we have valid start and end times
             if (!slot.start_time || !slot.end_time) {
