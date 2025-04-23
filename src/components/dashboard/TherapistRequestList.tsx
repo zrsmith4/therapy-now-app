@@ -11,20 +11,46 @@ export default function TherapistRequestList() {
   const { data: requests, isLoading, refetch } = useQuery({
     queryKey: ['appointment-requests'],
     queryFn: async () => {
+      // First, get the requests
       const { data, error } = await supabase
         .from('appointment_requests')
         .select(`
-          *,
-          patients (
-            first_name,
-            last_name
-          )
+          *
         `)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
         
       if (error) throw error;
-      return data;
+      
+      // For each request, get the patient details
+      if (data && data.length > 0) {
+        const patientDetails = await Promise.all(
+          data.map(async (request) => {
+            const { data: patientData, error: patientError } = await supabase
+              .from('patients')
+              .select('first_name, last_name')
+              .eq('user_id', request.patient_id)
+              .single();
+            
+            if (patientError) {
+              console.error('Error fetching patient:', patientError);
+              return {
+                ...request,
+                patientName: 'Unknown Patient'
+              };
+            }
+            
+            return {
+              ...request,
+              patientName: `${patientData.first_name} ${patientData.last_name}`
+            };
+          })
+        );
+        
+        return patientDetails;
+      }
+      
+      return data || [];
     },
   });
 
@@ -71,7 +97,7 @@ export default function TherapistRequestList() {
             <div key={request.id} className="bg-white p-4 rounded-lg shadow-sm">
               <div className="space-y-2">
                 <p>
-                  <strong>Patient:</strong> {request.patients.first_name} {request.patients.last_name}
+                  <strong>Patient:</strong> {request.patientName || 'Unknown Patient'}
                 </p>
                 <p>
                   <strong>Date:</strong> {new Date(request.requested_time).toLocaleDateString()}

@@ -233,7 +233,6 @@ const FindTherapist = () => {
                     reviewCount={0}
                     availableNow={true}
                     availableLocations={therapist.service_options}
-                    onBook={() => navigate('/appointments')}
                     onViewProfile={() => navigate('/therapist-profile')}
                   />
                 ))}

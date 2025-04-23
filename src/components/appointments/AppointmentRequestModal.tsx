@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 
 interface AppointmentRequestModalProps {
   isOpen: boolean;
@@ -28,19 +29,31 @@ export default function AppointmentRequestModal({
   const [notes, setNotes] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleSubmit = async () => {
     try {
+      if (!user) {
+        toast({
+          variant: "destructive",
+          title: "Authentication required",
+          description: "You must be logged in to request an appointment.",
+        });
+        return;
+      }
+      
       setIsSubmitting(true);
 
       const datetime = new Date(selectedDate);
       const [hours, minutes] = selectedTime.split(':');
       datetime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
+      // Add the user ID to the request
       const { error } = await supabase
         .from('appointment_requests')
         .insert({
           therapist_id: therapistId,
+          patient_id: user.id, // Add the patient_id from auth context
           requested_time: datetime.toISOString(),
           patient_notes: notes,
           location_type: locationType,
