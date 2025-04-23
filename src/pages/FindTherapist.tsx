@@ -75,15 +75,31 @@ const FindTherapist = () => {
       // This is a client-side filtering approach until we can use the server-side function
       const availableTherapistIds = (therapistSchedules || [])
         .filter((schedule: RawTherapistSchedule) => {
-          // Use type casting to work with the Json type from Supabase
-          const timeSlots = schedule.time_slots as TimeSlot[] | null;
+          // Use type assertion with safe guards
+          const timeSlotsData = schedule.time_slots;
           
           // Check if time_slots is an array
-          if (!Array.isArray(timeSlots)) {
+          if (!Array.isArray(timeSlotsData)) {
             return false;
           }
           
-          return timeSlots.some((slot: TimeSlot) => {
+          // Now we can safely map each item in the array to a TimeSlot
+          return timeSlotsData.some((slotData) => {
+            // Check that slotData has the required properties to be a TimeSlot
+            if (
+              typeof slotData !== 'object' || 
+              slotData === null || 
+              !('start_time' in slotData) || 
+              !('end_time' in slotData) || 
+              !('is_recurring' in slotData) || 
+              !('is_available' in slotData)
+            ) {
+              return false;
+            }
+            
+            // Now that we've verified the shape, we can treat it as a TimeSlot
+            const slot = slotData as TimeSlot;
+            
             // Make sure we have valid start and end times
             if (!slot.start_time || !slot.end_time) {
               return false;
