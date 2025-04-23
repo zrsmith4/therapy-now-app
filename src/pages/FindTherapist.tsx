@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Json } from '@/integrations/supabase/types';
 
 const DEFAULT_TIME_SLOTS = [
   "09:00", "10:00", "11:00", "12:00", "13:00", 
@@ -29,13 +30,13 @@ interface TimeSlot {
   is_recurring: boolean;
   day_of_week?: number | null;
   is_available: boolean;
-  therapist_id: string;
+  therapist_id?: string;
 }
 
-// Define schedule interface
-interface TherapistSchedule {
+// Define a type for the raw database response
+interface RawTherapistSchedule {
   user_id: string;
-  time_slots: TimeSlot[] | null;
+  time_slots: Json;
 }
 
 const FindTherapist = () => {
@@ -64,7 +65,6 @@ const FindTherapist = () => {
       datetime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
       // For now, we'll use a direct query instead of the stored function
-      // that is causing TypeScript errors
       const { data: therapistSchedules, error } = await supabase
         .from('therapist_schedules')
         .select('user_id, time_slots');
@@ -74,13 +74,16 @@ const FindTherapist = () => {
       // Filter therapists with availability at the requested time
       // This is a client-side filtering approach until we can use the server-side function
       const availableTherapistIds = (therapistSchedules || [])
-        .filter((schedule: TherapistSchedule) => {
+        .filter((schedule: RawTherapistSchedule) => {
+          // Use type casting to work with the Json type from Supabase
+          const timeSlots = schedule.time_slots as TimeSlot[] | null;
+          
           // Check if time_slots is an array
-          if (!Array.isArray(schedule.time_slots)) {
+          if (!Array.isArray(timeSlots)) {
             return false;
           }
           
-          return schedule.time_slots.some((slot: TimeSlot) => {
+          return timeSlots.some((slot: TimeSlot) => {
             // Make sure we have valid start and end times
             if (!slot.start_time || !slot.end_time) {
               return false;
