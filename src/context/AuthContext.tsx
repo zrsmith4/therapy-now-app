@@ -1,8 +1,8 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Tables } from '@/integrations/supabase/types';
 
 type UserRole = 'patient' | 'therapist' | null;
 
@@ -36,7 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Set up the auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_, session) => {
+      async (_, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -81,7 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('Error fetching user role:', error);
         setUserRole(null);
       } else {
-        setUserRole(data.role as UserRole);
+        setUserRole(data?.role as UserRole);
       }
     } catch (error) {
       console.error('Failed to fetch user role:', error);
@@ -93,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, metadata?: any) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { error, data } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -107,6 +107,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Account created successfully",
         description: "Please check your email for verification.",
       });
+
+      // Optional: Automatically set a default role if needed
+      if (data.user) {
+        await supabase.from('user_roles').insert({
+          user_id: data.user.id,
+          role: metadata?.role || 'patient' // Default to patient if no role specified
+        });
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -170,3 +178,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+export default AuthContext;
