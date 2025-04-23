@@ -5,6 +5,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
+// Define interface for appointment request with patient name
+interface AppointmentRequest {
+  id: string;
+  patient_id: string;
+  therapist_id: string;
+  requested_time: string;
+  status: 'pending' | 'accepted' | 'declined' | 'cancelled';
+  patient_notes?: string;
+  created_at: string;
+  location_type: string;
+  metadata?: any;
+  patientName?: string;
+}
+
 export default function TherapistRequestList() {
   const { toast } = useToast();
   
@@ -37,20 +51,20 @@ export default function TherapistRequestList() {
               return {
                 ...request,
                 patientName: 'Unknown Patient'
-              };
+              } as AppointmentRequest;
             }
             
             return {
               ...request,
               patientName: `${patientData.first_name} ${patientData.last_name}`
-            };
+            } as AppointmentRequest;
           })
         );
         
-        return patientDetails;
+        return patientDetails as AppointmentRequest[];
       }
       
-      return data || [];
+      return (data || []) as AppointmentRequest[];
     },
   });
 
