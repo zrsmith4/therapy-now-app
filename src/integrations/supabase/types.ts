@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      appointment_requests: {
+        Row: {
+          created_at: string | null
+          id: string
+          location_type: string
+          metadata: Json | null
+          patient_id: string
+          patient_notes: string | null
+          requested_time: string
+          status: Database["public"]["Enums"]["appointment_request_status"]
+          therapist_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          location_type: string
+          metadata?: Json | null
+          patient_id: string
+          patient_notes?: string | null
+          requested_time: string
+          status?: Database["public"]["Enums"]["appointment_request_status"]
+          therapist_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          location_type?: string
+          metadata?: Json | null
+          patient_id?: string
+          patient_notes?: string | null
+          requested_time?: string
+          status?: Database["public"]["Enums"]["appointment_request_status"]
+          therapist_id?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           created_at: string | null
@@ -60,6 +96,42 @@ export type Database = {
           read_at?: string | null
           receiver_id?: string
           sender_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          metadata: Json | null
+          recipient_id: string
+          related_id: string | null
+          status: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          metadata?: Json | null
+          recipient_id: string
+          related_id?: string | null
+          status?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          metadata?: Json | null
+          recipient_id?: string
+          related_id?: string | null
+          status?: string | null
+          title?: string
+          type?: string
         }
         Relationships: []
       }
@@ -371,7 +443,11 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      appointment_request_status:
+        | "pending"
+        | "accepted"
+        | "declined"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -486,6 +562,13 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      appointment_request_status: [
+        "pending",
+        "accepted",
+        "declined",
+        "cancelled",
+      ],
+    },
   },
 } as const

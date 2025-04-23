@@ -1,104 +1,82 @@
-import React from 'react'
-import { Button } from "@/components/ui/button"
-import { Link } from "react-router-dom"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { User } from "lucide-react"
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Bell } from "lucide-react";
 
 interface AppHeaderProps {
-  userType?: 'patient' | 'therapist' | null
-  userName?: string
+  userType?: 'patient' | 'therapist' | null;
+  userName?: string;
 }
 
-const AppHeader = ({ userType, userName }: AppHeaderProps) => {
+export default function AppHeader({ userType, userName }: AppHeaderProps) {
+  const { signOut } = useAuth();
+  const [notificationCount, setNotificationCount] = useState(0);
+  
+  useEffect(() => {
+    if (userType === 'therapist') {
+      const fetchNotifications = async () => {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('id')
+          .eq('status', 'unread');
+          
+        if (!error && data) {
+          setNotificationCount(data.length);
+        }
+      };
+      
+      fetchNotifications();
+      
+      // Subscribe to new notifications
+      const channel = supabase
+        .channel('db-changes')
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'notifications' },
+          () => fetchNotifications()
+        )
+        .subscribe();
+        
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [userType]);
+
   return (
-    <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
-      <div className="container flex h-16 items-center justify-between py-4">
-        <div className="flex items-center gap-2">
-          <Link to="/" className="flex items-center">
-            <span className="text-2xl font-bold text-medical-primary">Therapy</span>
-            <span className="text-2xl font-bold text-medical-secondary">Now</span>
+    <header className="bg-white border-b">
+      <div className="container mx-auto px-4 py-3">
+        <div className="flex items-center justify-between">
+          <Link to="/" className="text-lg font-semibold">
+            Medical Mobile
           </Link>
-        </div>
-        
-        <nav className="hidden md:flex items-center gap-6">
-          <Link to="/pricing" className="text-sm font-medium text-slate-700 hover:text-medical-primary transition-colors">
-            Pricing
-          </Link>
-          {userType && (
-            <>
-              <Link to="/appointments" className="text-sm font-medium text-slate-700 hover:text-medical-primary transition-colors">
-                Appointments
-              </Link>
-              {userType === 'patient' ? (
-                <>
-                  <Link to="/find-therapist" className="text-sm font-medium text-slate-700 hover:text-medical-primary transition-colors">
-                    Find Therapist
-                  </Link>
-                  <Link to="/my-profile" className="text-sm font-medium text-slate-700 hover:text-medical-primary transition-colors">
-                    My Profile
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link to="/schedule" className="text-sm font-medium text-slate-700 hover:text-medical-primary transition-colors">
-                    My Schedule
-                  </Link>
-                  <Link to="/patients" className="text-sm font-medium text-slate-700 hover:text-medical-primary transition-colors">
-                    My Patients
-                  </Link>
-                  <Link to="/therapist-dashboard" className="text-sm font-medium text-slate-700 hover:text-medical-primary transition-colors">
-                    Dashboard
-                  </Link>
-                </>
-              )}
-            </>
-          )}
-        </nav>
-        
-        <div className="flex items-center gap-4">
-          {userType ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="rounded-full h-8 w-8 p-0">
-                  <User className="h-4 w-4" />
-                  <span className="sr-only">User menu</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem className="font-medium">{userName || 'User'}</DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Link to={`/${userType}-profile`} className="w-full">Profile</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Link to="/messages" className="w-full">Messages</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Link to="/settings" className="w-full">Settings</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Link to="/" className="w-full">Sign out</Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <>
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/login">Log In</Link>
-              </Button>
-              <Button asChild size="sm">
-                <Link to="/signup">Sign Up</Link>
-              </Button>
-            </>
-          )}
+          
+          <div className="flex items-center space-x-4">
+            {userName && (
+              <span className="text-gray-700">
+                Welcome, {userName}!
+              </span>
+            )}
+            
+            {userType === 'therapist' && (
+              <div className="relative">
+                <Bell className="h-6 w-6" />
+                {notificationCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
+                    {notificationCount}
+                  </span>
+                )}
+              </div>
+            )}
+
+            <Button variant="outline" size="sm" onClick={signOut}>
+              Log Out
+            </Button>
+          </div>
         </div>
       </div>
     </header>
-  )
+  );
 }
-
-export default AppHeader

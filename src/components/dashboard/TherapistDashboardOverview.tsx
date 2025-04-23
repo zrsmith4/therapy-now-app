@@ -1,4 +1,3 @@
-
 import React from 'react';
 import WelcomeSection from './WelcomeSection';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import TherapistRequestList from './TherapistRequestList';
 
 // Demo appointment data
 const demoAppointments = [
@@ -64,7 +64,7 @@ const demoPatientNotes = [
   }
 ];
 
-const TherapistDashboardOverview = () => {
+export default function TherapistDashboardOverview() {
   const navigate = useNavigate();
   const [isAvailable, setIsAvailable] = useState(false);
   const [tabValue, setTabValue] = useState("appointments");
@@ -135,6 +135,7 @@ const TherapistDashboardOverview = () => {
           <TabsTrigger value="patients">Patient Notes</TabsTrigger>
           <TabsTrigger value="schedule">My Schedule</TabsTrigger>
           <TabsTrigger value="payouts">Payouts & Stats</TabsTrigger>
+          <TabsTrigger value="requests">Appointment Requests</TabsTrigger>
         </TabsList>
         
         <TabsContent value="appointments">
@@ -205,9 +206,11 @@ const TherapistDashboardOverview = () => {
             </div>
           </div>
         </TabsContent>
+        
+        <TabsContent value="requests">
+          <TherapistRequestList />
+        </TabsContent>
       </Tabs>
     </>
   );
-};
-
-export default TherapistDashboardOverview;
+}
