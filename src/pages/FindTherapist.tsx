@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import AppHeader from '@/components/layout/AppHeader';
 import TherapistFilterBar from '@/components/therapists/TherapistFilterBar';
@@ -9,6 +8,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Calendar } from '@/components/ui/calendar';
 import { Label } from '@/components/ui/label';
+import AvailableSlotsDisplay from '@/components/appointments/AvailableSlotsDisplay';
+import RequestAppointmentModal from '@/components/appointments/RequestAppointmentModal';
 import {
   Select,
   SelectContent,
@@ -23,7 +24,6 @@ const DEFAULT_TIME_SLOTS = [
   "14:00", "15:00", "16:00", "17:00"
 ];
 
-// Define the time slot interface to match our data structure
 interface TimeSlot {
   start_time: string;
   end_time: string;
@@ -33,7 +33,6 @@ interface TimeSlot {
   therapist_id?: string;
 }
 
-// Define a type for the raw database response
 interface RawTherapistSchedule {
   user_id: string;
   time_slots: Json;
@@ -52,6 +51,11 @@ const FindTherapist = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [therapists, setTherapists] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [selectedTherapist, setSelectedTherapist] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const searchTherapists = async () => {
     if (!selectedDate || !selectedTime) {
@@ -64,28 +68,21 @@ const FindTherapist = () => {
       const [hours, minutes] = selectedTime.split(':');
       datetime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-      // For now, we'll use a direct query instead of the stored function
       const { data: therapistSchedules, error } = await supabase
         .from('therapist_schedules')
         .select('user_id, time_slots');
         
       if (error) throw error;
       
-      // Filter therapists with availability at the requested time
-      // This is a client-side filtering approach until we can use the server-side function
       const availableTherapistIds = (therapistSchedules || [])
         .filter((schedule: RawTherapistSchedule) => {
-          // Use type assertion with safe guards
           const timeSlotsData = schedule.time_slots;
           
-          // Check if time_slots is an array
           if (!Array.isArray(timeSlotsData)) {
             return false;
           }
           
-          // Now we can safely map each item in the array to a TimeSlot
           return timeSlotsData.some((slotData) => {
-            // Check that slotData has the required properties to be a TimeSlot
             if (
               typeof slotData !== 'object' || 
               slotData === null || 
@@ -97,11 +94,8 @@ const FindTherapist = () => {
               return false;
             }
             
-            // Now that we've verified the shape, we can safely cast it as TimeSlot
-            // First cast to unknown, then to TimeSlot as recommended by the error message
             const slot = slotData as unknown as TimeSlot;
             
-            // Make sure we have valid start and end times
             if (!slot.start_time || !slot.end_time) {
               return false;
             }
@@ -128,6 +122,14 @@ const FindTherapist = () => {
       console.error('Error searching therapists:', error);
     }
     setIsLoading(false);
+  };
+
+  const handleRequestAppointment = (therapist: { id: string; first_name: string; last_name: string }) => {
+    setSelectedTherapist({
+      id: therapist.id,
+      name: `${therapist.first_name} ${therapist.last_name}`
+    });
+    setShowRequestModal(true);
   };
 
   return (
@@ -234,13 +236,39 @@ const FindTherapist = () => {
                     availableNow={true}
                     availableLocations={therapist.service_options}
                     onViewProfile={() => navigate('/therapist-profile')}
-                  />
+                    onRequestAppointment={() => handleRequestAppointment(therapist)}
+                  >
+                    <AvailableSlotsDisplay
+                      slots={therapist.time_slots || []}
+                      onSlotSelect={(time) => {
+                        setSelectedTime(time);
+                        handleRequestAppointment(therapist);
+                      }}
+                      selectedTime={selectedTime}
+                    />
+                  </TherapistCard>
                 ))}
               </div>
             )}
           </div>
         </div>
       </main>
+
+      {selectedTherapist && (
+        <RequestAppointmentModal
+          isOpen={showRequestModal}
+          onClose={() => {
+            setShowRequestModal(false);
+            setSelectedTherapist(null);
+          }}
+          therapistId={selectedTherapist.id}
+          therapistName={selectedTherapist.name}
+          selectedDate={selectedDate!}
+          selectedTime={selectedTime}
+          locationType={locationPreference}
+          onLocationTypeChange={setLocationPreference}
+        />
+      )}
     </div>
   );
 };
