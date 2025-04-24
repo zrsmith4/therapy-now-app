@@ -1,21 +1,26 @@
 
-import React, { useState } from 'react'
+import React from 'react'
 import AppHeader from '@/components/layout/AppHeader'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import AppointmentsList from '@/components/appointments/AppointmentsList'
 import { Button } from '@/components/ui/button'
 import { Calendar } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '@/context/AuthContext';
 
 const Appointments = () => {
-  const navigate = useNavigate()
-  const [userType, setUserType] = useState<'patient' | 'therapist'>('patient')
+  const navigate = useNavigate();
+  const { user, userRole } = useAuth();
+  
+  if (!user) {
+    return null; // or redirect to login
+  }
   
   return (
     <div className="min-h-screen bg-slate-50">
       <AppHeader 
-        userType={userType} 
-        userName={userType === 'patient' ? 'Alex Smith' : 'Dr. Sarah Johnson'} 
+        userType={userRole || 'patient'} 
+        userName={user.email} 
       />
       
       <main className="container px-4 py-8">
@@ -32,14 +37,15 @@ const Appointments = () => {
               <span>Calendar View</span>
             </Button>
             
-            {/* For demo purposes: toggle between patient/therapist view */}
-            <Button
-              size="sm"
-              onClick={() => setUserType(userType === 'patient' ? 'therapist' : 'patient')}
-              className="bg-medical-primary hover:bg-medical-dark"
-            >
-              Toggle to {userType === 'patient' ? 'Therapist' : 'Patient'} View
-            </Button>
+            {userRole === 'patient' && (
+              <Button
+                size="sm"
+                onClick={() => navigate('/find-therapist')}
+                className="bg-medical-primary hover:bg-medical-dark"
+              >
+                Book New Appointment
+              </Button>
+            )}
           </div>
         </div>
         
@@ -53,25 +59,21 @@ const Appointments = () => {
           <TabsContent value="upcoming">
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <h2 className="text-xl font-semibold mb-4">Upcoming Appointments</h2>
-              <AppointmentsList userType={userType} />
+              <AppointmentsList userType={userRole || 'patient'} />
             </div>
           </TabsContent>
           
           <TabsContent value="completed">
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <h2 className="text-xl font-semibold mb-4">Completed Appointments</h2>
-              <div className="text-center py-4">
-                <p className="text-slate-500">You don't have any completed appointments</p>
-              </div>
+              <AppointmentsList userType={userRole || 'patient'} />
             </div>
           </TabsContent>
           
           <TabsContent value="cancelled">
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <h2 className="text-xl font-semibold mb-4">Cancelled Appointments</h2>
-              <div className="text-center py-4">
-                <p className="text-slate-500">You don't have any cancelled appointments</p>
-              </div>
+              <AppointmentsList userType={userRole || 'patient'} />
             </div>
           </TabsContent>
         </Tabs>
