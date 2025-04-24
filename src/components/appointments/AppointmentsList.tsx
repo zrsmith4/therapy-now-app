@@ -13,26 +13,41 @@ interface Appointment {
   location_type: string;
   status: 'scheduled' | 'completed' | 'cancelled';
   patient_notes?: string;
+  patients?: {
+    first_name: string;
+    last_name: string;
+  };
 }
 
 export default function AppointmentsList({ userType }: { userType: 'patient' | 'therapist' }) {
   const { data: appointments, isLoading } = useQuery({
     queryKey: ['appointments'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('appointments')
-        .select(`
-          *,
-          patients!appointments_patient_id_fkey (
-            first_name,
-            last_name
-          )
-        `)
-        .order('start_time', { ascending: true });
+      // For patient and therapist views, we need different queries
+      if (userType === 'patient') {
+        const { data, error } = await supabase
+          .from('appointments')
+          .select('*')
+          .order('start_time', { ascending: true });
 
-      if (error) throw error;
+        if (error) throw error;
+        return data || [];
+      } else {
+        // For therapists, get the patient information
+        const { data, error } = await supabase
+          .from('appointments')
+          .select(`
+            *,
+            patients (
+              first_name,
+              last_name
+            )
+          `)
+          .order('start_time', { ascending: true });
 
-      return data || [];
+        if (error) throw error;
+        return data || [];
+      }
     },
   });
 
@@ -47,16 +62,18 @@ export default function AppointmentsList({ userType }: { userType: 'patient' | '
           No appointments scheduled.
         </div>
       ) : (
-        appointments.map((appointment) => (
+        appointments.map((appointment: Appointment) => (
           <AppointmentCard
             key={appointment.id}
             date={new Date(appointment.start_time).toLocaleDateString()}
             time={new Date(appointment.start_time).toLocaleTimeString()}
-            location={appointment.location_type}
-            patient={userType === 'therapist' ? {
+            location={{
+              type: appointment.location_type as 'mobile' | 'clinic' | 'virtual'
+            }}
+            patient={userType === 'therapist' && appointment.patients ? {
               name: `${appointment.patients.first_name} ${appointment.patients.last_name}`
             } : undefined}
-            status={appointment.status}
+            status={mapStatusToAppointmentCardStatus(appointment.status)}
             onManage={() => {}}
             userType={userType}
           />
@@ -64,4 +81,17 @@ export default function AppointmentsList({ userType }: { userType: 'patient' | '
       )}
     </div>
   );
+}
+
+// Helper function to map database status to component status
+function mapStatusToAppointmentCardStatus(status: string): 'upcoming' | 'completed' | 'cancelled' {
+  switch (status) {
+    case 'completed':
+      return 'completed';
+    case 'cancelled':
+      return 'cancelled';
+    case 'scheduled':
+    default:
+      return 'upcoming';
+  }
 }
