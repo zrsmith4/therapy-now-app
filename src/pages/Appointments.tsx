@@ -59,21 +59,21 @@ const Appointments = () => {
           <TabsContent value="upcoming">
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <h2 className="text-xl font-semibold mb-4">Upcoming Appointments</h2>
-              <AppointmentsList userType={userRole || 'patient'} />
+              <AppointmentsList userType={userRole || 'patient'} statusFilter="scheduled" />
             </div>
           </TabsContent>
           
           <TabsContent value="completed">
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <h2 className="text-xl font-semibold mb-4">Completed Appointments</h2>
-              <AppointmentsList userType={userRole || 'patient'} />
+              <AppointmentsList userType={userRole || 'patient'} statusFilter="completed" />
             </div>
           </TabsContent>
           
           <TabsContent value="cancelled">
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <h2 className="text-xl font-semibold mb-4">Cancelled Appointments</h2>
-              <AppointmentsList userType={userRole || 'patient'} />
+              <AppointmentsList userType={userRole || 'patient'} statusFilter="cancelled" />
             </div>
           </TabsContent>
         </Tabs>

@@ -6,6 +6,7 @@ import AppointmentCard from './AppointmentCard';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Json } from '@/integrations/supabase/types';
 
 // Define the types for the different Supabase query responses
 interface AppointmentBase {
@@ -17,6 +18,9 @@ interface AppointmentBase {
   location_type: string;
   status: string; 
   patient_notes?: string;
+  location_details?: Json;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // For therapist view with patient details
@@ -24,7 +28,7 @@ interface AppointmentWithPatient extends AppointmentBase {
   patients: {
     first_name: string;
     last_name: string;
-  };
+  } | null;
 }
 
 // For patient view with therapist details
@@ -32,7 +36,7 @@ interface AppointmentWithTherapist extends AppointmentBase {
   therapists: {
     first_name: string;
     last_name: string;
-  };
+  } | null;
 }
 
 type AppointmentWithDetails = AppointmentWithPatient | AppointmentWithTherapist;
@@ -42,12 +46,12 @@ function hasPatientData(appointment: AppointmentWithDetails): appointment is App
   return 'patients' in appointment && appointment.patients !== null;
 }
 
-export default function AppointmentsList({ userType }: { userType: 'patient' | 'therapist' }) {
+export default function AppointmentsList({ userType, statusFilter }: { userType: 'patient' | 'therapist', statusFilter?: string }) {
   const { user } = useAuth();
   const { toast } = useToast();
 
   const { data: appointments, isLoading, refetch } = useQuery({
-    queryKey: ['appointments', userType],
+    queryKey: ['appointments', userType, statusFilter],
     queryFn: async () => {
       if (!user) throw new Error('User not authenticated');
 
@@ -55,7 +59,7 @@ export default function AppointmentsList({ userType }: { userType: 'patient' | '
       const idField = userType === 'patient' ? 'patient_id' : 'therapist_id';
       const detailsTable = userType === 'patient' ? 'therapists' : 'patients';
       
-      const { data, error } = await supabase
+      let query = supabase
         .from('appointments')
         .select(`
           *,
@@ -64,11 +68,17 @@ export default function AppointmentsList({ userType }: { userType: 'patient' | '
             last_name
           )
         `)
-        .eq(idField, user.id)
-        .order('start_time', { ascending: true });
+        .eq(idField, user.id);
+      
+      // Apply status filter if provided
+      if (statusFilter) {
+        query = query.eq('status', statusFilter);
+      }
+      
+      const { data, error } = await query.order('start_time', { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      return data as unknown as AppointmentWithDetails[];
     },
   });
 
@@ -115,33 +125,43 @@ export default function AppointmentsList({ userType }: { userType: 'patient' | '
     <div className="space-y-4">
       {appointments?.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
-          No appointments scheduled.
+          No appointments found.
         </div>
       ) : (
-        appointments?.map((appointment: AppointmentWithDetails) => (
-          <AppointmentCard
-            key={appointment.id}
-            date={new Date(appointment.start_time).toLocaleDateString()}
-            time={new Date(appointment.start_time).toLocaleTimeString()}
-            location={{
-              type: appointment.location_type as 'mobile' | 'clinic' | 'virtual'
-            }}
-            patient={userType === 'therapist' && hasPatientData(appointment) ? {
-              name: `${appointment.patients.first_name} ${appointment.patients.last_name}`
-            } : undefined}
-            therapist={userType === 'patient' ? {
-              name: `${(appointment as AppointmentWithTherapist).therapists.first_name} ${(appointment as AppointmentWithTherapist).therapists.last_name}`,
-              specialty: 'Physical Therapist'
-            } : undefined}
-            status={mapStatusToAppointmentCardStatus(appointment.status)}
-            onManage={() => {
-              if (userType === 'therapist' && appointment.status === 'scheduled') {
-                handleMarkAsCompleted(appointment.id);
-              }
-            }}
-            userType={userType}
-          />
-        ))
+        appointments?.map((appointment) => {
+          // Safely extract names even if the related record is null
+          let name = "Unknown";
+          if (userType === 'therapist' && hasPatientData(appointment) && appointment.patients) {
+            name = `${appointment.patients.first_name} ${appointment.patients.last_name}`;
+          } else if (userType === 'patient' && 'therapists' in appointment && appointment.therapists) {
+            name = `${appointment.therapists.first_name} ${appointment.therapists.last_name}`;
+          }
+
+          return (
+            <AppointmentCard
+              key={appointment.id}
+              date={new Date(appointment.start_time).toLocaleDateString()}
+              time={new Date(appointment.start_time).toLocaleTimeString()}
+              location={{
+                type: appointment.location_type as 'mobile' | 'clinic' | 'virtual'
+              }}
+              patient={userType === 'therapist' ? {
+                name
+              } : undefined}
+              therapist={userType === 'patient' ? {
+                name,
+                specialty: 'Physical Therapist'
+              } : undefined}
+              status={mapStatusToAppointmentCardStatus(appointment.status)}
+              onManage={() => {
+                if (userType === 'therapist' && appointment.status === 'scheduled') {
+                  handleMarkAsCompleted(appointment.id);
+                }
+              }}
+              userType={userType}
+            />
+          );
+        })
       )}
     </div>
   );
