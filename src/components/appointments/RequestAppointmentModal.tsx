@@ -1,12 +1,11 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/context/AuthContext";
 import LocationTypeSelector from './LocationTypeSelector';
+import { PaymentForm } from './PaymentForm';
 
 interface RequestAppointmentModalProps {
   isOpen: boolean;
@@ -29,8 +28,10 @@ export default function RequestAppointmentModal({
   locationType,
   onLocationTypeChange,
 }: RequestAppointmentModalProps) {
-  const [notes, setNotes] = React.useState('');
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [notes, setNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [appointmentRequest, setAppointmentRequest] = useState<any>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -51,7 +52,7 @@ export default function RequestAppointmentModal({
       const [hours, minutes] = selectedTime.split(':');
       datetime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-      const { error } = await supabase
+      const { data: requestData, error } = await supabase
         .from('appointment_requests')
         .insert({
           therapist_id: therapistId,
@@ -59,16 +60,14 @@ export default function RequestAppointmentModal({
           requested_time: datetime.toISOString(),
           patient_notes: notes,
           location_type: locationType,
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
-      toast({
-        title: "Request sent successfully",
-        description: `Your appointment request has been sent to ${therapistName}`,
-      });
-      
-      onClose();
+      setAppointmentRequest(requestData);
+      setShowPayment(true);
     } catch (error) {
       console.error('Error submitting appointment request:', error);
       toast({
@@ -81,47 +80,65 @@ export default function RequestAppointmentModal({
     }
   };
 
+  const handlePaymentSuccess = () => {
+    toast({
+      title: "Payment successful",
+      description: "Your appointment request has been sent.",
+    });
+    onClose();
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Request Appointment</DialogTitle>
+          <DialogTitle>
+            {showPayment ? "Complete Payment" : "Request Appointment"}
+          </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <p><strong>Therapist:</strong> {therapistName}</p>
-            <p><strong>Date:</strong> {selectedDate?.toLocaleDateString()}</p>
-            <p><strong>Time:</strong> {selectedTime}</p>
-          </div>
+        {!showPayment ? (
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <p><strong>Therapist:</strong> {therapistName}</p>
+              <p><strong>Date:</strong> {selectedDate?.toLocaleDateString()}</p>
+              <p><strong>Time:</strong> {selectedTime}</p>
+            </div>
 
-          <LocationTypeSelector
-            value={locationType}
-            onChange={onLocationTypeChange}
-          />
-
-          <div className="space-y-2">
-            <label htmlFor="notes" className="text-sm font-medium">
-              Additional Notes (optional)
-            </label>
-            <Textarea
-              id="notes"
-              placeholder="Any specific concerns or requirements..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="min-h-[100px]"
+            <LocationTypeSelector
+              value={locationType}
+              onChange={onLocationTypeChange}
             />
-          </div>
-        </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? "Sending..." : "Send Request"}
-          </Button>
-        </DialogFooter>
+            <div className="space-y-2">
+              <label htmlFor="notes" className="text-sm font-medium">
+                Additional Notes (optional)
+              </label>
+              <Textarea
+                id="notes"
+                placeholder="Any specific concerns or requirements..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="min-h-[100px]"
+              />
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button onClick={handleSubmit} disabled={isSubmitting}>
+                {isSubmitting ? "Sending..." : "Proceed to Payment"}
+              </Button>
+            </DialogFooter>
+          </div>
+        ) : (
+          <PaymentForm
+            appointmentRequest={appointmentRequest}
+            onSuccess={handlePaymentSuccess}
+            onCancel={() => setShowPayment(false)}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
