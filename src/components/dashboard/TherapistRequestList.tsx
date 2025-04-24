@@ -1,11 +1,11 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/context/AuthContext';
 
-// Define interface for appointment request with patient name
 interface AppointmentRequest {
   id: string;
   patient_id: string;
@@ -21,16 +21,20 @@ interface AppointmentRequest {
 
 export default function TherapistRequestList() {
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const { data: requests, isLoading, refetch } = useQuery({
     queryKey: ['appointment-requests'],
     queryFn: async () => {
+      if (!user) throw new Error('User not authenticated');
+
       // First, get the requests
       const { data, error } = await supabase
         .from('appointment_requests')
         .select(`
           *
         `)
+        .eq('therapist_id', user.id)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
         
@@ -94,7 +98,24 @@ export default function TherapistRequestList() {
   };
 
   if (isLoading) {
-    return <div>Loading requests...</div>;
+    return (
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">Pending Appointment Requests</h2>
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white p-4 rounded-lg shadow-sm">
+              <Skeleton className="h-4 w-3/4 mb-4" />
+              <Skeleton className="h-4 w-1/2 mb-4" />
+              <Skeleton className="h-4 w-2/3 mb-4" />
+              <div className="flex gap-2">
+                <Skeleton className="h-9 w-20" />
+                <Skeleton className="h-9 w-20" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (

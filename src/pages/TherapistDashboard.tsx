@@ -10,6 +10,7 @@ import { Calendar, Clock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import TherapistScheduleCalendar from '@/components/therapists/TherapistScheduleCalendar'
 import ScheduleOptionsSelector from '@/components/therapists/ScheduleOptionsSelector'
+import TherapistRequestList from '@/components/dashboard/TherapistRequestList'
 
 // Demo appointment data
 const demoAppointments = [
@@ -139,6 +140,7 @@ const TherapistDashboard = () => {
         <Tabs value={tabValue} onValueChange={setTabValue} defaultValue="appointments">
           <TabsList className="mb-6">
             <TabsTrigger value="appointments">Appointments</TabsTrigger>
+            <TabsTrigger value="requests">Pending Requests</TabsTrigger>
             <TabsTrigger value="patients">Patient Notes</TabsTrigger>
             <TabsTrigger value="schedule">My Schedule</TabsTrigger>
             <TabsTrigger value="payouts">Payouts & Stats</TabsTrigger>
@@ -167,6 +169,10 @@ const TherapistDashboard = () => {
                 />
               ))}
             </div>
+          </TabsContent>
+          
+          <TabsContent value="requests">
+            <TherapistRequestList />
           </TabsContent>
           
           <TabsContent value="patients">
