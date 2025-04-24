@@ -11,7 +11,7 @@ interface Appointment {
   start_time: string;
   end_time: string;
   location_type: string;
-  status: 'scheduled' | 'completed' | 'cancelled';
+  status: string; // Changed from enum type to string to match Supabase's return type
   patient_notes?: string;
   patients?: {
     first_name: string;
@@ -62,7 +62,7 @@ export default function AppointmentsList({ userType }: { userType: 'patient' | '
           No appointments scheduled.
         </div>
       ) : (
-        appointments.map((appointment: Appointment) => (
+        appointments.map((appointment) => (
           <AppointmentCard
             key={appointment.id}
             date={new Date(appointment.start_time).toLocaleDateString()}
