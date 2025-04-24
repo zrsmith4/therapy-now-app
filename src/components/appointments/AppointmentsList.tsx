@@ -4,19 +4,29 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import AppointmentCard from './AppointmentCard';
 
-interface Appointment {
+// Define the types for the different Supabase query responses
+interface AppointmentBase {
   id: string;
   patient_id: string;
   therapist_id: string;
   start_time: string;
   end_time: string;
   location_type: string;
-  status: string; // Changed from enum type to string to match Supabase's return type
+  status: string; 
   patient_notes?: string;
-  patients?: {
+}
+
+// For therapist view with patient details
+interface AppointmentWithPatient extends AppointmentBase {
+  patients: {
     first_name: string;
     last_name: string;
   };
+}
+
+// Define a type guard to check if an appointment has patient data
+function hasPatientData(appointment: AppointmentBase | AppointmentWithPatient): appointment is AppointmentWithPatient {
+  return 'patients' in appointment && appointment.patients !== null;
 }
 
 export default function AppointmentsList({ userType }: { userType: 'patient' | 'therapist' }) {
@@ -70,7 +80,7 @@ export default function AppointmentsList({ userType }: { userType: 'patient' | '
             location={{
               type: appointment.location_type as 'mobile' | 'clinic' | 'virtual'
             }}
-            patient={userType === 'therapist' && appointment.patients ? {
+            patient={userType === 'therapist' && hasPatientData(appointment) ? {
               name: `${appointment.patients.first_name} ${appointment.patients.last_name}`
             } : undefined}
             status={mapStatusToAppointmentCardStatus(appointment.status)}
