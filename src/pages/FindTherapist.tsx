@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import AppHeader from '@/components/layout/AppHeader';
 import TherapistFilterBar from '@/components/therapists/TherapistFilterBar';
@@ -138,6 +139,7 @@ const FindTherapist = () => {
       
       <main className="container px-4 py-8">
         <div className="flex flex-col md:flex-row gap-6">
+          {/* Left sidebar */}
           <div className="md:w-1/3 lg:w-1/4">
             <h2 className="text-xl font-semibold mb-4">Select Appointment Time</h2>
             
@@ -184,6 +186,7 @@ const FindTherapist = () => {
             </Button>
           </div>
           
+          {/* Main content */}
           <div className="md:w-2/3 lg:w-3/4">
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-2xl font-bold">Find a Therapist</h1>

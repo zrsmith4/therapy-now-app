@@ -16,6 +16,8 @@ interface TherapistCardProps {
   availableNow: boolean;
   availableLocations: string[];
   onViewProfile: () => void;
+  onRequestAppointment?: () => void;
+  children?: React.ReactNode; // Added children prop
 }
 
 export default function TherapistCard({
@@ -27,6 +29,8 @@ export default function TherapistCard({
   availableNow,
   availableLocations,
   onViewProfile,
+  onRequestAppointment,
+  children, // Added children to destructure
 }: TherapistCardProps) {
   const [showRequestModal, setShowRequestModal] = useState(false);
   
@@ -58,10 +62,13 @@ export default function TherapistCard({
           ))}
         </div>
       </div>
+
+      {/* Render children if passed */}
+      {children}
       
       <div className="flex gap-2 mt-4">
         <Button onClick={onViewProfile} variant="outline">View Profile</Button>
-        <Button onClick={() => setShowRequestModal(true)}>Request Appointment</Button>
+        <Button onClick={onRequestAppointment || (() => setShowRequestModal(true))}>Request Appointment</Button>
       </div>
 
       <AppointmentRequestModal
