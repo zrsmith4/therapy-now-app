@@ -45,6 +45,48 @@ export type Database = {
         }
         Relationships: []
       }
+      appointments: {
+        Row: {
+          created_at: string | null
+          end_time: string
+          id: string
+          location_details: Json | null
+          location_type: string
+          patient_id: string
+          patient_notes: string | null
+          start_time: string
+          status: string | null
+          therapist_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_time: string
+          id?: string
+          location_details?: Json | null
+          location_type: string
+          patient_id: string
+          patient_notes?: string | null
+          start_time: string
+          status?: string | null
+          therapist_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_time?: string
+          id?: string
+          location_details?: Json | null
+          location_type?: string
+          patient_id?: string
+          patient_notes?: string | null
+          start_time?: string
+          status?: string | null
+          therapist_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           created_at: string | null
