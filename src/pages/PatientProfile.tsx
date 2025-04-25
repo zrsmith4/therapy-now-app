@@ -58,7 +58,7 @@ const PatientProfile = () => {
         toast({
           variant: 'destructive',
           title: 'Error loading profile',
-          description: 'Unable to load your profile information.',
+          description: 'Unable to load your profile information. Please refresh the page and try again.',
         });
       } finally {
         setLoading(false);

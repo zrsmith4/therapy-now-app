@@ -23,52 +23,59 @@ export default function TherapistRequestList() {
   const { toast } = useToast();
   const { user } = useAuth();
   
-  const { data: requests, isLoading, refetch } = useQuery({
+  const { data: requests, isLoading, error, refetch } = useQuery({
     queryKey: ['appointment-requests'],
     queryFn: async () => {
-      if (!user) throw new Error('User not authenticated');
+      try {
+        if (!user) throw new Error('User not authenticated');
 
-      // First, get the requests
-      const { data, error } = await supabase
-        .from('appointment_requests')
-        .select(`
-          *
-        `)
-        .eq('therapist_id', user.id)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
+        // First, get the requests
+        const { data, error } = await supabase
+          .from('appointment_requests')
+          .select(`
+            *
+          `)
+          .eq('therapist_id', user.id)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false });
+          
+        if (error) throw error;
         
-      if (error) throw error;
-      
-      // For each request, get the patient details
-      if (data && data.length > 0) {
-        const patientDetails = await Promise.all(
-          data.map(async (request) => {
-            const { data: patientData, error: patientError } = await supabase
-              .from('patients')
-              .select('first_name, last_name')
-              .eq('user_id', request.patient_id)
-              .single();
-            
-            if (patientError) {
-              console.error('Error fetching patient:', patientError);
-              return {
-                ...request,
-                patientName: 'Unknown Patient'
-              } as AppointmentRequest;
-            }
-            
-            return {
-              ...request,
-              patientName: `${patientData.first_name} ${patientData.last_name}`
-            } as AppointmentRequest;
-          })
-        );
+        // For each request, get the patient details
+        if (data && data.length > 0) {
+          const patientDetails = await Promise.all(
+            data.map(async (request) => {
+              try {
+                const { data: patientData, error: patientError } = await supabase
+                  .from('patients')
+                  .select('first_name, last_name')
+                  .eq('user_id', request.patient_id)
+                  .single();
+                
+                if (patientError) throw patientError;
+                
+                return {
+                  ...request,
+                  patientName: `${patientData.first_name} ${patientData.last_name}`
+                } as AppointmentRequest;
+              } catch (error) {
+                console.error('Error fetching patient details:', error);
+                return {
+                  ...request,
+                  patientName: 'Unknown Patient'
+                } as AppointmentRequest;
+              }
+            })
+          );
+          
+          return patientDetails;
+        }
         
-        return patientDetails as AppointmentRequest[];
+        return (data || []) as AppointmentRequest[];
+      } catch (error) {
+        console.error('Error fetching appointment requests:', error);
+        throw new Error('Failed to load appointment requests. Please try again later.');
       }
-      
-      return (data || []) as AppointmentRequest[];
     },
   });
 
@@ -96,6 +103,24 @@ export default function TherapistRequestList() {
       });
     }
   };
+
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">Pending Appointment Requests</h2>
+        <div className="p-4 rounded-lg bg-red-50 text-red-800">
+          <p>Unable to load appointment requests. Please try refreshing the page.</p>
+          <Button 
+            variant="outline" 
+            onClick={() => refetch()} 
+            className="mt-2"
+          >
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

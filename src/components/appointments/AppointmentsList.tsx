@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -50,37 +49,50 @@ export default function AppointmentsList({ userType, statusFilter }: { userType:
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const { data: appointments, isLoading, refetch } = useQuery({
+  const { data: appointments, isLoading, error } = useQuery({
     queryKey: ['appointments', userType, statusFilter],
     queryFn: async () => {
-      if (!user) throw new Error('User not authenticated');
+      try {
+        if (!user) throw new Error('User not authenticated');
 
-      // For patient and therapist views, we need different queries
-      const idField = userType === 'patient' ? 'patient_id' : 'therapist_id';
-      const detailsTable = userType === 'patient' ? 'therapists' : 'patients';
-      
-      let query = supabase
-        .from('appointments')
-        .select(`
-          *,
-          ${detailsTable}(
-            first_name,
-            last_name
-          )
-        `)
-        .eq(idField, user.id);
-      
-      // Apply status filter if provided
-      if (statusFilter) {
-        query = query.eq('status', statusFilter);
+        // For patient and therapist views, we need different queries
+        const idField = userType === 'patient' ? 'patient_id' : 'therapist_id';
+        const detailsTable = userType === 'patient' ? 'therapists' : 'patients';
+        
+        let query = supabase
+          .from('appointments')
+          .select(`
+            *,
+            ${detailsTable}(
+              first_name,
+              last_name
+            )
+          `)
+          .eq(idField, user.id);
+        
+        // Apply status filter if provided
+        if (statusFilter) {
+          query = query.eq('status', statusFilter);
+        }
+        
+        const { data, error } = await query.order('start_time', { ascending: true });
+
+        if (error) throw error;
+        return data as unknown as AppointmentWithDetails[];
+      } catch (error) {
+        console.error('Error fetching appointments:', error);
+        throw new Error('Failed to load appointments. Please try again later.');
       }
-      
-      const { data, error } = await query.order('start_time', { ascending: true });
-
-      if (error) throw error;
-      return data as unknown as AppointmentWithDetails[];
     },
   });
+
+  if (error) {
+    return (
+      <div className="p-4 rounded-lg bg-red-50 text-red-800">
+        <p>Unable to load appointments. Please try refreshing the page.</p>
+      </div>
+    );
+  }
 
   const handleMarkAsCompleted = async (appointmentId: string) => {
     try {
