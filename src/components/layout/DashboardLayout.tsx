@@ -17,7 +17,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         userType="therapist" 
         userName={user?.email || 'Therapist'} 
       />
-      <main className="container px-4 py-8">
+      <main className="container px-4 py-8 pt-16">
         {children || <Outlet />}
       </main>
     </div>

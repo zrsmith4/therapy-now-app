@@ -16,7 +16,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         userType={userRole || 'patient'} 
         userName={user?.email || 'Guest'} 
       />
-      <main className="container px-4 py-8">
+      <main className="container px-4 py-8 pt-16">
         {children}
       </main>
     </div>
