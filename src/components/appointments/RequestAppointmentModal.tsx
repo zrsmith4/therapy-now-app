@@ -68,9 +68,12 @@ export default function RequestAppointmentModal({
           undefined;
 
         // Get available service types
-        const available_types = Array.isArray(data.service_options) ? 
-          data.service_options as Array<'mobile' | 'clinic' | 'virtual'> : 
-          ['mobile', 'clinic', 'virtual'];
+        const available_types: Array<'mobile' | 'clinic' | 'virtual'> = 
+          Array.isArray(data.service_options) ? 
+            data.service_options.filter((option): option is 'mobile' | 'clinic' | 'virtual' => {
+              return option === 'mobile' || option === 'clinic' || option === 'virtual';
+            }) : 
+            ['mobile', 'clinic', 'virtual'];
 
         setTherapistLocationDetails({ 
           clinic_address,

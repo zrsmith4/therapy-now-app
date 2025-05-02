@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +14,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { CheckboxGroup, Checkbox } from "@/components/ui/checkbox";
+import { Json } from '@/integrations/supabase/types';
 
 interface TimeSlot {
   start_time: string;
@@ -90,16 +92,19 @@ export const AvailabilityManager = () => {
         location_types: selectedLocationTypes
       };
 
+      // Convert availabilityData to a JSON-compatible format for Supabase
+      const timeSlotData = availabilityData as unknown as Json;
+
       // Instead of directly using the new table that isn't in TypeScript definitions yet,
       // we'll use a generic approach with any typing
       const { error } = await supabase
         .from('therapist_schedules') // Using existing table that is in the TypeScript definitions
-        .insert([{
+        .insert({
           user_id: 'demo-therapist-id',
           date: isRecurring ? null : selectedDate?.toISOString().split('T')[0],
-          time_slots: [availabilityData], // Store our availability data in the time_slots JSONB column
+          time_slots: [timeSlotData], // Store our availability data in the time_slots JSONB column
           updated_at: new Date().toISOString()
-        }]);
+        });
 
       if (error) throw error;
 

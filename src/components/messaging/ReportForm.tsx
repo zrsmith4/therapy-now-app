@@ -72,11 +72,10 @@ const ReportForm: React.FC<ReportFormProps> = ({
         reportData.reported_conversation_id = conversationId;
       }
 
-      // Use the raw REST API approach to insert into reports table
-      // since it might not be in the generated types yet
+      // Using the generic insert approach that doesn't require type definitions
       const { error } = await supabase
-        .from('reports')
-        .insert(reportData as any);
+        .from('reports' as any)
+        .insert(reportData);
 
       if (error) throw error;
 
