@@ -3,7 +3,7 @@ import React from 'react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge-custom"
-import { Clock, MapPin, User, Video } from "lucide-react"
+import { Clock, MapPin, User, Video, Car } from "lucide-react"
 
 interface AppointmentCardProps {
   date: string
@@ -11,6 +11,7 @@ interface AppointmentCardProps {
   location: {
     type: 'mobile' | 'clinic' | 'virtual'
     address?: string
+    details?: any
   }
   therapist?: {
     name: string
@@ -27,7 +28,7 @@ interface AppointmentCardProps {
 }
 
 const locationIcons = {
-  mobile: <MapPin className="h-4 w-4" />,
+  mobile: <Car className="h-4 w-4" />,
   clinic: <MapPin className="h-4 w-4" />,
   virtual: <Video className="h-4 w-4" />
 }
@@ -48,6 +49,25 @@ const AppointmentCard = ({
   onManage,
   userType
 }: AppointmentCardProps) => {
+  // Extract address based on location type
+  const getLocationAddress = () => {
+    if (location.address) return location.address;
+    
+    if (location.details) {
+      if (location.type === 'mobile' && location.details.patient_address) {
+        return location.details.patient_address;
+      } else if (location.type === 'clinic' && location.details.clinic_address) {
+        return location.details.clinic_address;
+      } else if (location.type === 'virtual' && location.details.meeting_link) {
+        return location.details.meeting_link;
+      }
+    }
+    
+    return undefined;
+  };
+
+  const locationAddress = getLocationAddress();
+
   return (
     <Card className={`mb-4 ${status === 'cancelled' ? 'opacity-60' : ''}`}>
       <CardContent className="p-5">
@@ -70,16 +90,20 @@ const AppointmentCard = ({
             
             <h3 className="text-lg font-semibold mb-1">{date}</h3>
             
-            <div className="flex items-center gap-4 text-sm text-slate-500">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-slate-500">
               <div className="flex items-center gap-1">
                 <Clock className="h-3 w-3" />
                 <span>{time}</span>
               </div>
               
-              {location.type !== 'virtual' && location.address && (
+              {locationAddress && (
                 <div className="flex items-center gap-1">
-                  <MapPin className="h-3 w-3" />
-                  <span>{location.address}</span>
+                  {location.type === 'virtual' ? (
+                    <Video className="h-3 w-3" />
+                  ) : (
+                    <MapPin className="h-3 w-3" />
+                  )}
+                  <span className="truncate max-w-[200px]">{locationAddress}</span>
                 </div>
               )}
             </div>

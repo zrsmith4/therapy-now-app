@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AppHeader from '@/components/layout/AppHeader';
 import TherapistFilterBar from '@/components/therapists/TherapistFilterBar';
 import TherapistCard from '@/components/therapists/TherapistCard';
@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Json } from '@/integrations/supabase/types';
+import { useAuth } from '@/context/AuthContext';
 
 const DEFAULT_TIME_SLOTS = [
   "09:00", "10:00", "11:00", "12:00", "13:00", 
@@ -32,6 +33,7 @@ interface TimeSlot {
   day_of_week?: number | null;
   is_available: boolean;
   therapist_id?: string;
+  location_types?: Array<'mobile' | 'clinic' | 'virtual'>;
 }
 
 interface RawTherapistSchedule {
@@ -41,6 +43,7 @@ interface RawTherapistSchedule {
 
 const FindTherapist = () => {
   const navigate = useNavigate();
+  const { user, userRole } = useAuth();
   const [locationPreference, setLocationPreference] = useState<'mobile' | 'clinic' | 'virtual'>('mobile');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedTime, setSelectedTime] = useState("09:00");
@@ -58,6 +61,13 @@ const FindTherapist = () => {
     name: string;
   } | null>(null);
 
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth');
+    }
+  }, [user, navigate]);
+
   const searchTherapists = async () => {
     if (!selectedDate || !selectedTime) {
       return;
@@ -69,12 +79,14 @@ const FindTherapist = () => {
       const [hours, minutes] = selectedTime.split(':');
       datetime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
+      // Get all therapist schedules
       const { data: therapistSchedules, error } = await supabase
         .from('therapist_schedules')
         .select('user_id, time_slots');
         
       if (error) throw error;
       
+      // Filter therapists by location preference
       const availableTherapistIds = (therapistSchedules || [])
         .filter((schedule: RawTherapistSchedule) => {
           const timeSlotsData = schedule.time_slots;
@@ -97,7 +109,13 @@ const FindTherapist = () => {
             
             const slot = slotData as unknown as TimeSlot;
             
-            if (!slot.start_time || !slot.end_time) {
+            // Check if slot is available and supports the selected location type
+            if (!slot.start_time || !slot.end_time || !slot.is_available) {
+              return false;
+            }
+            
+            // Check if the slot supports the selected location type
+            if (slot.location_types && !slot.location_types.includes(locationPreference)) {
               return false;
             }
             
@@ -112,10 +130,23 @@ const FindTherapist = () => {
         const { data: therapistDetails, error: therapistsError } = await supabase
           .from('therapists')
           .select('*')
-          .in('user_id', availableTherapistIds);
+          .in('user_id', availableTherapistIds)
+          // Filter by service options (location types)
+          .contains('service_options', [locationPreference]);
 
         if (therapistsError) throw therapistsError;
-        setTherapists(therapistDetails || []);
+        
+        // Apply specialty filter if selected
+        let filteredTherapists = therapistDetails || [];
+        if (filters.specialties.length > 0) {
+          filteredTherapists = filteredTherapists.filter(therapist => 
+            filters.specialties.some(specialty => 
+              therapist.specialties && therapist.specialties.includes(specialty)
+            )
+          );
+        }
+        
+        setTherapists(filteredTherapists);
       } else {
         setTherapists([]);
       }
@@ -135,7 +166,7 @@ const FindTherapist = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <AppHeader userType="patient" userName="Alex Smith" />
+      <AppHeader userType={userRole || 'patient'} userName={user?.email || ''} />
       
       <main className="container px-4 py-8">
         <div className="flex flex-col md:flex-row gap-6">

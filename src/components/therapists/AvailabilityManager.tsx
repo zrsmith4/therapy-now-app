@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -13,12 +12,15 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { CheckboxGroup, Checkbox } from "@/components/ui/checkbox";
 
 interface TimeSlot {
   start_time: string;
   end_time: string;
   is_recurring: boolean;
   day_of_week?: number;
+  is_available: boolean;
+  location_types: Array<'mobile' | 'clinic' | 'virtual'>;
 }
 
 const DEFAULT_TIME_SLOTS = [
@@ -38,6 +40,18 @@ export const AvailabilityManager = () => {
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("17:00");
   const [selectedDay, setSelectedDay] = useState<number>(new Date().getDay());
+  const [selectedLocationTypes, setSelectedLocationTypes] = useState<Array<'mobile' | 'clinic' | 'virtual'>>(['mobile', 'clinic', 'virtual']);
+
+  const handleLocationTypeChange = (locationType: 'mobile' | 'clinic' | 'virtual') => {
+    setSelectedLocationTypes(prev => {
+      // If already selected, remove it
+      if (prev.includes(locationType)) {
+        return prev.filter(type => type !== locationType);
+      } 
+      // Otherwise add it
+      return [...prev, locationType];
+    });
+  };
 
   const handleSaveAvailability = async () => {
     try {
@@ -49,7 +63,15 @@ export const AvailabilityManager = () => {
         return;
       }
 
-      const availabilityData = {
+      if (selectedLocationTypes.length === 0) {
+        toast({
+          title: "Please select at least one location type",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const availabilityData: TimeSlot = {
         start_time: isRecurring 
           ? `2000-01-01T${startTime}:00Z`
           : new Date(selectedDate!.setHours(
@@ -63,9 +85,9 @@ export const AvailabilityManager = () => {
               parseInt(endTime.split(':')[1])
             )).toISOString(),
         is_recurring: isRecurring,
-        day_of_week: isRecurring ? selectedDay : null,
+        day_of_week: isRecurring ? selectedDay : undefined,
         is_available: true,
-        therapist_id: 'demo-therapist-id' // Using a demo ID, in real app this would come from auth
+        location_types: selectedLocationTypes
       };
 
       // Instead of directly using the new table that isn't in TypeScript definitions yet,
@@ -170,6 +192,38 @@ export const AvailabilityManager = () => {
               ))}
             </SelectContent>
           </Select>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="locationTypes">Available for:</Label>
+        <div className="flex flex-wrap gap-4 mt-2">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="mobile-type"
+              checked={selectedLocationTypes.includes('mobile')}
+              onCheckedChange={() => handleLocationTypeChange('mobile')}
+            />
+            <Label htmlFor="mobile-type">Mobile Visits</Label>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="clinic-type"
+              checked={selectedLocationTypes.includes('clinic')}
+              onCheckedChange={() => handleLocationTypeChange('clinic')}
+            />
+            <Label htmlFor="clinic-type">Clinic Visits</Label>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="virtual-type"
+              checked={selectedLocationTypes.includes('virtual')}
+              onCheckedChange={() => handleLocationTypeChange('virtual')}
+            />
+            <Label htmlFor="virtual-type">Virtual Visits</Label>
+          </div>
         </div>
       </div>
 

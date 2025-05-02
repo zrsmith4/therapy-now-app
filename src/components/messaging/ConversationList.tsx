@@ -1,67 +1,31 @@
 
-import React, { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { format } from 'date-fns';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 
-interface ConversationProps {
+interface ConversationListProps {
+  onSelectConversation: (conversationId: string) => void;
+  selectedConversationId?: string;
+}
+
+interface UserDetails {
+  first_name: string;
+  last_name: string;
+}
+
+interface Conversation {
   id: string;
   patient_id: string;
   therapist_id: string;
+  created_at: string;
   updated_at: string;
-  patient?: {
-    first_name: string;
-    last_name: string;
-  };
-  therapist?: {
-    first_name: string;
-    last_name: string;
-  };
-  onSelect: (id: string) => void;
-  selectedId?: string;
-}
-
-export const Conversation: React.FC<ConversationProps> = ({
-  id,
-  patient,
-  therapist,
-  updated_at,
-  onSelect,
-  selectedId,
-  patient_id,
-  therapist_id
-}) => {
-  const { user, userRole } = useAuth();
-  const isSelected = id === selectedId;
-  
-  // Determine whose name to display based on the current user
-  const displayName = userRole === 'patient'
-    ? therapist ? `${therapist.first_name} ${therapist.last_name}` : 'Therapist'
-    : patient ? `${patient.first_name} ${patient.last_name}` : 'Patient';
-  
-  return (
-    <Button
-      variant={isSelected ? 'default' : 'ghost'}
-      className={`w-full justify-start p-4 ${isSelected ? '' : 'hover:bg-gray-100'}`}
-      onClick={() => onSelect(id)}
-    >
-      <div className="flex flex-col items-start">
-        <div className="font-medium">{displayName}</div>
-        <div className="text-xs text-gray-500">
-          Last updated: {format(new Date(updated_at), 'MMM d, h:mm a')}
-        </div>
-      </div>
-    </Button>
-  );
-};
-
-interface ConversationListProps {
-  onSelectConversation: (id: string) => void;
-  selectedConversationId?: string;
+  unread_count: number;
+  other_user_details: UserDetails;
 }
 
 const ConversationList: React.FC<ConversationListProps> = ({
@@ -70,64 +34,142 @@ const ConversationList: React.FC<ConversationListProps> = ({
 }) => {
   const { user, userRole } = useAuth();
   const { toast } = useToast();
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [filteredConversations, setFilteredConversations] = useState<Conversation[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const { data: conversations, isLoading, error, refetch } = useQuery({
-    queryKey: ['conversations'],
-    queryFn: async () => {
-      try {
-        if (!user) throw new Error('User not authenticated');
+  // Function to fetch conversations
+  const fetchConversations = async () => {
+    try {
+      setIsLoading(true);
+      setError('');
+      
+      if (!user || !userRole) return;
 
-        let query = supabase
-          .from('conversations')
-          .select(`
-            *,
-            patient:patient_id(first_name, last_name),
-            therapist:therapist_id(first_name, last_name)
-          `);
+      const otherUserRole = userRole === 'patient' ? 'therapist' : 'patient';
+      const userIdField = userRole === 'patient' ? 'patient_id' : 'therapist_id';
+      const otherUserIdField = userRole === 'patient' ? 'therapist_id' : 'patient_id';
 
-        // Filter based on user role
-        if (userRole === 'patient') {
-          query = query.eq('patient_id', user.id);
-        } else if (userRole === 'therapist') {
-          query = query.eq('therapist_id', user.id);
-        }
-
-        const { data, error } = await query.order('updated_at', { ascending: false });
-
-        if (error) throw error;
-        return data;
-      } catch (error) {
-        console.error('Error fetching conversations:', error);
-        throw new Error('Failed to load conversations');
+      // Get conversations where the user is either the patient or the therapist
+      const { data: conversationsData, error: conversationsError } = await supabase
+        .from('conversations')
+        .select('*')
+        .eq(userIdField, user.id);
+      
+      if (conversationsError) throw conversationsError;
+      
+      if (!conversationsData || conversationsData.length === 0) {
+        setConversations([]);
+        setFilteredConversations([]);
+        setIsLoading(false);
+        return;
       }
-    },
-    enabled: !!user && !!userRole
-  });
 
+      // Fetch unread count for each conversation
+      const conversationsWithDetails = await Promise.all(
+        conversationsData.map(async (conversation) => {
+          // Count unread messages
+          const { count: unreadCount, error: countError } = await supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('conversation_id', conversation.id)
+            .eq('receiver_id', user.id)
+            .is('read_at', null);
+          
+          if (countError) throw countError;
+          
+          // Get other user's details (either patient or therapist)
+          let otherUserDetails: UserDetails = { first_name: 'Unknown', last_name: 'User' };
+          const otherUserId = conversation[otherUserIdField as keyof typeof conversation] as string;
+          
+          if (otherUserRole === 'patient') {
+            const { data: patientData, error: patientError } = await supabase
+              .from('patients')
+              .select('first_name, last_name')
+              .eq('user_id', otherUserId)
+              .single();
+            
+            if (patientError) {
+              console.error('Error fetching patient details:', patientError);
+            } else if (patientData) {
+              otherUserDetails = patientData;
+            }
+          } else {
+            const { data: therapistData, error: therapistError } = await supabase
+              .from('therapists')
+              .select('first_name, last_name')
+              .eq('user_id', otherUserId)
+              .single();
+            
+            if (therapistError) {
+              console.error('Error fetching therapist details:', therapistError);
+            } else if (therapistData) {
+              otherUserDetails = therapistData;
+            }
+          }
+
+          return {
+            ...conversation,
+            unread_count: unreadCount || 0,
+            other_user_details: otherUserDetails
+          };
+        })
+      );
+
+      // Sort conversations by updated_at date (most recent first)
+      const sortedConversations = conversationsWithDetails.sort((a, b) => 
+        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      );
+
+      setConversations(sortedConversations);
+      setFilteredConversations(sortedConversations);
+    } catch (err) {
+      console.error('Error fetching conversations:', err);
+      setError('Failed to load conversations');
+      toast({ 
+        title: "Error", 
+        description: "Failed to load conversations", 
+        variant: "destructive" 
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Filter conversations based on search query
   useEffect(() => {
-    // Subscribe to conversation updates
-    const channel = supabase
-      .channel('conversations')
-      .on('postgres_changes', 
-        { event: 'UPDATE', schema: 'public', table: 'conversations' },
-        (payload) => {
-          refetch();
-        }
-      )
-      .subscribe();
+    if (!searchQuery.trim()) {
+      setFilteredConversations(conversations);
+      return;
+    }
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [refetch]);
+    const filtered = conversations.filter(conversation => {
+      const otherUserName = `${conversation.other_user_details.first_name} ${conversation.other_user_details.last_name}`.toLowerCase();
+      return otherUserName.includes(searchQuery.toLowerCase());
+    });
+
+    setFilteredConversations(filtered);
+  }, [searchQuery, conversations]);
+
+  // Fetch conversations on component mount and when user changes
+  useEffect(() => {
+    if (user) {
+      fetchConversations();
+    }
+  }, [user, userRole]);
 
   if (isLoading) {
     return (
-      <div className="space-y-2">
+      <div className="space-y-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="p-4 border rounded">
-            <Skeleton className="h-5 w-24 mb-1" />
-            <Skeleton className="h-4 w-32" />
+          <div key={i} className="flex items-center space-x-4">
+            <Skeleton className="h-12 w-12 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-[250px]" />
+              <Skeleton className="h-4 w-[200px]" />
+            </div>
           </div>
         ))}
       </div>
@@ -136,38 +178,69 @@ const ConversationList: React.FC<ConversationListProps> = ({
 
   if (error) {
     return (
-      <div className="p-4 text-red-500">
-        <p>Failed to load conversations</p>
-        <Button variant="outline" className="mt-2" onClick={() => refetch()}>
-          Try again
+      <div className="p-4 text-center">
+        <p className="text-red-500">{error}</p>
+        <Button 
+          onClick={fetchConversations} 
+          variant="outline" 
+          className="mt-2"
+        >
+          Try Again
         </Button>
       </div>
     );
   }
 
-  if (!conversations || conversations.length === 0) {
+  if (conversations.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500">
-        <p>No conversations yet</p>
+      <div className="p-4 text-center">
+        <p className="text-gray-500">No conversations yet</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-1">
-      {conversations.map((conversation) => (
-        <Conversation
-          key={conversation.id}
-          id={conversation.id}
-          patient={conversation.patient}
-          therapist={conversation.therapist}
-          patient_id={conversation.patient_id}
-          therapist_id={conversation.therapist_id}
-          updated_at={conversation.updated_at}
-          onSelect={onSelectConversation}
-          selectedId={selectedConversationId}
+    <div className="space-y-4">
+      <div className="relative">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+        <Input
+          type="search"
+          placeholder="Search conversations..."
+          className="pl-8"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
         />
-      ))}
+      </div>
+      
+      <div className="space-y-2">
+        {filteredConversations.map((conversation) => (
+          <div
+            key={conversation.id}
+            className={`flex items-center p-3 rounded-md cursor-pointer ${
+              selectedConversationId === conversation.id 
+                ? 'bg-slate-100'
+                : 'hover:bg-slate-50'
+            }`}
+            onClick={() => onSelectConversation(conversation.id)}
+          >
+            <div className="flex-grow">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium">
+                  {conversation.other_user_details.first_name} {conversation.other_user_details.last_name}
+                </h3>
+                {conversation.unread_count > 0 && (
+                  <span className="bg-medical-primary text-white text-xs font-bold px-2 py-1 rounded-full">
+                    {conversation.unread_count}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-gray-500 truncate">
+                {new Date(conversation.updated_at).toLocaleDateString()} {new Date(conversation.updated_at).toLocaleTimeString()}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

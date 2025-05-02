@@ -15,7 +15,7 @@ interface AppointmentBase {
   therapist_id: string;
   start_time: string;
   end_time: string;
-  location_type: string;
+  location_type: 'mobile' | 'clinic' | 'virtual';
   status: string; 
   patient_notes?: string;
   location_details?: Json;
@@ -157,7 +157,8 @@ export default function AppointmentsList({ userType, statusFilter }: { userType:
               date={new Date(appointment.start_time).toLocaleDateString()}
               time={new Date(appointment.start_time).toLocaleTimeString()}
               location={{
-                type: appointment.location_type as 'mobile' | 'clinic' | 'virtual'
+                type: appointment.location_type,
+                details: appointment.location_details
               }}
               patient={userType === 'therapist' ? {
                 name

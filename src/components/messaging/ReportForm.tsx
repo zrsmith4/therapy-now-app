@@ -53,7 +53,13 @@ const ReportForm: React.FC<ReportFormProps> = ({
     try {
       setIsSubmitting(true);
 
-      const reportData = {
+      const reportData: {
+        reporter_id: string;
+        reason: string;
+        status: string;
+        reported_message_id?: string;
+        reported_conversation_id?: string;
+      } = {
         reporter_id: user.id,
         reason: reason.trim(),
         status: 'pending'
@@ -61,14 +67,16 @@ const ReportForm: React.FC<ReportFormProps> = ({
 
       // Add either messageId or conversationId, depending on what's being reported
       if (messageId) {
-        Object.assign(reportData, { reported_message_id: messageId });
+        reportData.reported_message_id = messageId;
       } else {
-        Object.assign(reportData, { reported_conversation_id: conversationId });
+        reportData.reported_conversation_id = conversationId;
       }
 
+      // Use the raw REST API approach to insert into reports table
+      // since it might not be in the generated types yet
       const { error } = await supabase
         .from('reports')
-        .insert(reportData);
+        .insert(reportData as any);
 
       if (error) throw error;
 
