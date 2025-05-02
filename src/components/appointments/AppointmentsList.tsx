@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import AppointmentCard from './AppointmentCard';
 import { useAuth } from '@/context/AuthContext';
@@ -48,8 +49,9 @@ function hasPatientData(appointment: AppointmentWithDetails): appointment is App
 export default function AppointmentsList({ userType, statusFilter }: { userType: 'patient' | 'therapist', statusFilter?: string }) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const { data: appointments, isLoading, error } = useQuery({
+  const { data: appointments, isLoading, error, refetch } = useQuery({
     queryKey: ['appointments', userType, statusFilter],
     queryFn: async () => {
       try {

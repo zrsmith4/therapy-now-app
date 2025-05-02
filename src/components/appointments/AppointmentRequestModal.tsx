@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -31,6 +30,42 @@ export default function AppointmentRequestModal({
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // Create or find a conversation between patient and therapist
+  const ensureConversationExists = async (patientId: string, therapistId: string) => {
+    try {
+      // Check if conversation already exists
+      const { data: existingConversation, error: fetchError } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('patient_id', patientId)
+        .eq('therapist_id', therapistId)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+
+      // If conversation exists, return its ID
+      if (existingConversation) {
+        return existingConversation.id;
+      }
+
+      // Otherwise create a new conversation
+      const { data: newConversation, error: insertError } = await supabase
+        .from('conversations')
+        .insert({
+          patient_id: patientId,
+          therapist_id: therapistId
+        })
+        .select('id')
+        .single();
+
+      if (insertError) throw insertError;
+      return newConversation.id;
+    } catch (error) {
+      console.error('Error ensuring conversation exists:', error);
+      return null;
+    }
+  };
+
   const handleSubmit = async () => {
     try {
       if (!user) {
@@ -60,6 +95,9 @@ export default function AppointmentRequestModal({
         });
 
       if (error) throw error;
+
+      // Ensure conversation exists between patient and therapist
+      await ensureConversationExists(user.id, therapistId);
 
       toast({
         title: "Request sent successfully",
