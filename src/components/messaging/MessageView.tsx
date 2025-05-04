@@ -22,6 +22,26 @@ interface Message {
   read_at: string | null;
 }
 
+interface TherapistData {
+  first_name: string;
+  last_name: string;
+}
+
+interface PatientData {
+  first_name: string;
+  last_name: string;
+}
+
+interface Conversation {
+  id: string;
+  patient_id: string;
+  therapist_id: string;
+  created_at: string;
+  updated_at: string;
+  patient?: PatientData | null;
+  therapist?: TherapistData | null;
+}
+
 interface MessageViewProps {
   conversationId: string;
 }
@@ -37,7 +57,7 @@ const MessageView: React.FC<MessageViewProps> = ({ conversationId }) => {
   const [isSending, setIsSending] = useState(false);
 
   // Fetch conversation details
-  const { data: conversation } = useQuery({
+  const { data: conversation } = useQuery<Conversation | null>({
     queryKey: ['conversation', conversationId],
     queryFn: async () => {
       try {
@@ -54,7 +74,7 @@ const MessageView: React.FC<MessageViewProps> = ({ conversationId }) => {
           .single();
 
         if (error) throw error;
-        return data;
+        return data as Conversation;
       } catch (error) {
         handleError(error, {
           context: 'fetching conversation details',
@@ -224,11 +244,13 @@ const MessageView: React.FC<MessageViewProps> = ({ conversationId }) => {
     if (!conversation) return "";
     
     const isPatient = user?.id === conversation.patient_id;
+    
     if (isPatient && conversation.therapist) {
       return `${conversation.therapist.first_name} ${conversation.therapist.last_name}`;
     } else if (!isPatient && conversation.patient) {
       return `${conversation.patient.first_name} ${conversation.patient.last_name}`;
     }
+    
     return "Chat";
   };
 
