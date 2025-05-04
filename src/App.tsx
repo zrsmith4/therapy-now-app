@@ -26,6 +26,7 @@ import SignUpChoice from "./pages/SignUpChoice";
 import Profile from "./pages/Profile";
 import Messages from "./pages/Messages";
 import Appointments from "./pages/Appointments";
+import Notifications from "./pages/Notifications";
 
 // Protected pages - Patient only
 import FindTherapist from "./pages/FindTherapist";
@@ -43,7 +44,15 @@ import TherapistScheduleView from "@/components/dashboard/TherapistScheduleView"
 import TherapistPatientsList from "@/components/dashboard/TherapistPatientsList";
 
 const App = () => {
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: 1,
+        refetchOnWindowFocus: true,
+        staleTime: 1000 * 60 * 5, // 5 minutes
+      },
+    },
+  }));
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -84,6 +93,13 @@ const App = () => {
                   </PrivateRoute>
                 </AppLayout>
               } />
+              
+              {/* New Notifications route */}
+              <Route path="/notifications" element={
+                <PrivateRoute>
+                  <Notifications />
+                </PrivateRoute>
+              } />
 
               {/* Patient-only routes */}
               <Route path="/find-therapist" element={
@@ -95,11 +111,9 @@ const App = () => {
               } />
               
               <Route path="/patient-profile" element={
-                <AppLayout>
-                  <PrivateRoute requiredRole="patient">
-                    <PatientProfile />
-                  </PrivateRoute>
-                </AppLayout>
+                <PrivateRoute requiredRole="patient">
+                  <PatientProfile />
+                </PrivateRoute>
               } />
               
               <Route path="/patient-signup" element={
@@ -110,11 +124,9 @@ const App = () => {
 
               {/* Therapist-only routes */}
               <Route path="/therapist-profile" element={
-                <AppLayout>
-                  <PrivateRoute requiredRole="therapist">
-                    <TherapistProfile />
-                  </PrivateRoute>
-                </AppLayout>
+                <PrivateRoute requiredRole="therapist">
+                  <TherapistProfile />
+                </PrivateRoute>
               } />
               
               <Route path="/therapist-signup" element={
