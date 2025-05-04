@@ -32,14 +32,21 @@ interface PatientData {
   last_name: string;
 }
 
+// Define a type for potential relation errors from Supabase
+type SelectQueryError = {
+  error: true;
+} & String;
+
+// Update our interface to handle potential relation errors
 interface Conversation {
   id: string;
   patient_id: string;
   therapist_id: string;
   created_at: string;
   updated_at: string;
-  patient?: PatientData | null;
-  therapist?: TherapistData | null;
+  // Make the relations optional or potentially errors
+  patient?: PatientData | null | SelectQueryError;
+  therapist?: TherapistData | null | SelectQueryError;
 }
 
 interface MessageViewProps {
@@ -245,9 +252,10 @@ const MessageView: React.FC<MessageViewProps> = ({ conversationId }) => {
     
     const isPatient = user?.id === conversation.patient_id;
     
-    if (isPatient && conversation.therapist) {
+    // Check if the therapist/patient is a valid object with the expected properties
+    if (isPatient && conversation.therapist && 'first_name' in conversation.therapist && 'last_name' in conversation.therapist) {
       return `${conversation.therapist.first_name} ${conversation.therapist.last_name}`;
-    } else if (!isPatient && conversation.patient) {
+    } else if (!isPatient && conversation.patient && 'first_name' in conversation.patient && 'last_name' in conversation.patient) {
       return `${conversation.patient.first_name} ${conversation.patient.last_name}`;
     }
     
