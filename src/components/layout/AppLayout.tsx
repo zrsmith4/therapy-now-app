@@ -18,7 +18,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, isLoading = false }) =>
         userName={user?.email || 'Guest'} 
         isLoading={isLoading}
       />
-      <main className="container px-4 py-8 mt-16 flex-grow">
+      <main className="container mx-auto px-4 py-8 mt-16 flex-grow">
         {children}
       </main>
     </div>

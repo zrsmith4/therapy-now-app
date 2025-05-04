@@ -8,8 +8,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Flag } from 'lucide-react';
+import { Flag, Send } from 'lucide-react';
 import ReportForm from './ReportForm';
+import { handleError } from '@/utils/errorHandling';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Message {
   id: string;
@@ -32,6 +34,7 @@ const MessageView: React.FC<MessageViewProps> = ({ conversationId }) => {
   const [newMessage, setNewMessage] = useState('');
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [reportedMessageId, setReportedMessageId] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
 
   // Fetch conversation details
   const { data: conversation } = useQuery({
@@ -53,7 +56,10 @@ const MessageView: React.FC<MessageViewProps> = ({ conversationId }) => {
         if (error) throw error;
         return data;
       } catch (error) {
-        console.error('Error fetching conversation details:', error);
+        handleError(error, {
+          context: 'fetching conversation details',
+          toastDescription: 'Could not load conversation details'
+        });
         return null;
       }
     },
@@ -76,8 +82,11 @@ const MessageView: React.FC<MessageViewProps> = ({ conversationId }) => {
         if (error) throw error;
         return data as Message[];
       } catch (error) {
-        console.error('Error fetching messages:', error);
-        throw new Error('Failed to load messages');
+        handleError(error, {
+          context: 'fetching messages',
+          toastDescription: 'Failed to load messages'
+        });
+        return [];
       }
     },
     enabled: !!user && !!conversationId
@@ -85,22 +94,24 @@ const MessageView: React.FC<MessageViewProps> = ({ conversationId }) => {
 
   // Subscribe to new messages
   useEffect(() => {
-    if (!conversationId) return;
+    if (!conversationId || !user) return;
 
     const channel = supabase
-      .channel('messages')
+      .channel(`messages:${conversationId}`)
       .on('postgres_changes', 
         { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${conversationId}` },
         (payload) => {
-          refetch();
+          console.log('New message received:', payload);
+          queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
         }
       )
       .subscribe();
 
     return () => {
+      console.log('Unsubscribing from messages channel');
       supabase.removeChannel(channel);
     };
-  }, [conversationId, refetch]);
+  }, [conversationId, queryClient, user]);
 
   // Mark messages as read
   useEffect(() => {
@@ -124,10 +135,14 @@ const MessageView: React.FC<MessageViewProps> = ({ conversationId }) => {
               .eq('id', update.id);
           }
 
-          // Refetch to update the UI
+          // Refetch to update the UI and also invalidate the ConversationList
           queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
+          queryClient.invalidateQueries({ queryKey: ['conversations'] });
         } catch (error) {
-          console.error('Error marking messages as read:', error);
+          handleError(error, {
+            context: 'marking messages as read',
+            silent: true
+          });
         }
       }
     };
@@ -143,9 +158,11 @@ const MessageView: React.FC<MessageViewProps> = ({ conversationId }) => {
   }, [messages]);
 
   const sendMessage = async () => {
-    if (!user || !conversationId || !newMessage.trim()) return;
+    if (!user || !conversationId || !newMessage.trim() || isSending) return;
 
     try {
+      setIsSending(true);
+      
       // Determine the receiver_id based on conversation
       const receiverId = conversation?.patient_id === user.id 
         ? conversation.therapist_id 
@@ -172,19 +189,47 @@ const MessageView: React.FC<MessageViewProps> = ({ conversationId }) => {
       if (error) throw error;
 
       setNewMessage('');
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast({
-        variant: "destructive",
-        title: "Error sending message",
-        description: "Please try again",
+      
+      // Optimistically update the UI by adding the new message locally
+      const optimisticMessage: Message = {
+        id: `temp-${Date.now()}`,
+        content: newMessage.trim(),
+        sender_id: user.id,
+        receiver_id: receiverId,
+        created_at: new Date().toISOString(),
+        read_at: null
+      };
+      
+      queryClient.setQueryData(['messages', conversationId], (oldMessages: Message[] = []) => {
+        return [...oldMessages, optimisticMessage];
       });
+      
+    } catch (error) {
+      handleError(error, {
+        context: 'sending message',
+        toastTitle: "Error sending message",
+        toastDescription: "Please try again"
+      });
+    } finally {
+      setIsSending(false);
     }
   };
 
   const handleOpenReport = (messageId: string) => {
     setReportedMessageId(messageId);
     setIsReportOpen(true);
+  };
+
+  const getOtherPersonName = () => {
+    if (!conversation) return "";
+    
+    const isPatient = user?.id === conversation.patient_id;
+    if (isPatient && conversation.therapist) {
+      return `${conversation.therapist.first_name} ${conversation.therapist.last_name}`;
+    } else if (!isPatient && conversation.patient) {
+      return `${conversation.patient.first_name} ${conversation.patient.last_name}`;
+    }
+    return "Chat";
   };
 
   if (isLoading) {
@@ -212,54 +257,58 @@ const MessageView: React.FC<MessageViewProps> = ({ conversationId }) => {
     );
   }
 
-  if (!messages) {
-    return (
-      <div className="p-4 text-center text-gray-500">
-        <p>No messages in this conversation yet</p>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-grow overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => {
-          const isCurrentUser = message.sender_id === user?.id;
-          return (
-            <div 
-              key={message.id} 
-              className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
-            >
-              <div 
-                className={`relative max-w-[80%] p-3 rounded-lg ${
-                  isCurrentUser 
-                    ? 'bg-blue-100 text-blue-800' 
-                    : 'bg-gray-100 text-gray-800'
-                }`}
-              >
-                <p>{message.content}</p>
-                <div className="flex justify-between items-center mt-1">
-                  <span className="text-xs text-gray-500">
-                    {format(new Date(message.created_at), 'h:mm a')}
-                  </span>
-                  {!isCurrentUser && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 ml-2 opacity-0 group-hover:opacity-100"
-                      onClick={() => handleOpenReport(message.id)}
-                    >
-                      <Flag className="h-3 w-3" />
-                      <span className="sr-only">Report message</span>
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-        <div ref={messagesEndRef} />
+      <div className="px-4 py-2 border-b bg-slate-50">
+        <h3 className="font-medium">{getOtherPersonName()}</h3>
       </div>
+      
+      <ScrollArea className="flex-grow p-4">
+        <div className="space-y-4 min-h-[500px]">
+          {messages && messages.length > 0 ? (
+            messages.map((message) => {
+              const isCurrentUser = message.sender_id === user?.id;
+              return (
+                <div 
+                  key={message.id} 
+                  className={`group flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div 
+                    className={`relative max-w-[80%] p-3 rounded-lg ${
+                      isCurrentUser 
+                        ? 'bg-blue-100 text-blue-800' 
+                        : 'bg-gray-100 text-gray-800'
+                    }`}
+                  >
+                    <p className="break-words">{message.content}</p>
+                    <div className="flex justify-between items-center mt-1">
+                      <span className="text-xs text-gray-500">
+                        {format(new Date(message.created_at), 'h:mm a')}
+                      </span>
+                      {!isCurrentUser && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 ml-2 opacity-0 group-hover:opacity-100"
+                          onClick={() => handleOpenReport(message.id)}
+                        >
+                          <Flag className="h-3 w-3" />
+                          <span className="sr-only">Report message</span>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="flex items-center justify-center h-64 text-gray-500">
+              No messages yet. Start the conversation!
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+      </ScrollArea>
 
       <div className="p-4 bg-white border-t">
         <div className="flex space-x-2">
@@ -268,9 +317,15 @@ const MessageView: React.FC<MessageViewProps> = ({ conversationId }) => {
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type your message..."
             className="flex-grow"
-            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+            disabled={isSending}
           />
-          <Button onClick={sendMessage} disabled={!newMessage.trim()}>
+          <Button 
+            onClick={sendMessage} 
+            disabled={!newMessage.trim() || isSending}
+            className="px-4"
+          >
+            <Send className="h-4 w-4 mr-2" />
             Send
           </Button>
         </div>

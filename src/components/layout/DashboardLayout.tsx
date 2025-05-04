@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import AppHeader from './AppHeader';
 import { useAuth } from '@/context/AuthContext';
 import { Outlet } from 'react-router-dom';
@@ -15,11 +15,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, isLoading =
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <AppHeader 
-        userType="therapist" 
+        userType={userRole || "therapist"} 
         userName={user?.email || 'Therapist'} 
         isLoading={isLoading}
       />
-      <main className="container px-4 py-8 mt-16 flex-grow">
+      <main className="container mx-auto px-4 py-8 mt-16 flex-grow">
         {children || <Outlet />}
       </main>
     </div>

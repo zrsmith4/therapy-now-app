@@ -1,19 +1,21 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AppHeader from '@/components/layout/AppHeader';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import ConversationList from '@/components/messaging/ConversationList';
 import MessageView from '@/components/messaging/MessageView';
 import { Skeleton } from '@/components/ui/skeleton';
+import AppLayout from '@/components/layout/AppLayout';
+import { handleError } from '@/utils/errorHandling';
 
 const Messages = () => {
   const { user, userRole } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Check if we're in development environment
   const isDevelopment = process.env.NODE_ENV === 'development' || 
@@ -30,65 +32,57 @@ const Messages = () => {
       });
       navigate('/auth');
     }
+    setIsLoading(false);
   }, [user, navigate, toast, isDevelopment]);
 
   const handleSelectConversation = (conversationId: string) => {
     setSelectedConversation(conversationId);
   };
 
-  // Show loading skeleton only if we need authentication (not in dev mode) and user is not logged in
-  if (!user && !isDevelopment) {
+  // Show loading state
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        <AppHeader />
-        <main className="container px-4 py-8 pt-16">
-          <div className="flex justify-center items-center h-64">
-            <Skeleton className="h-12 w-64" />
-          </div>
-        </main>
-      </div>
+      <AppLayout isLoading={true}>
+        <div className="flex justify-center items-center h-64">
+          <Skeleton className="h-12 w-64" />
+        </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <AppHeader 
-        userType={userRole as 'patient' | 'therapist' | null} 
-        userName={user?.email} 
-      />
-      <main className="container px-4 py-8 pt-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="md:col-span-1">
-            <CardHeader>
-              <CardTitle>Conversations</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ConversationList 
-                onSelectConversation={handleSelectConversation}
-                selectedConversationId={selectedConversation || undefined}
-              />
-            </CardContent>
-          </Card>
+    <AppLayout>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="md:col-span-1">
+          <CardHeader>
+            <CardTitle>Conversations</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ConversationList 
+              onSelectConversation={handleSelectConversation}
+              selectedConversationId={selectedConversation || undefined}
+            />
+          </CardContent>
+        </Card>
 
-          <Card className="md:col-span-2 min-h-[600px] flex flex-col">
-            <CardHeader>
-              <CardTitle>
-                {selectedConversation ? 'Messages' : 'Select a conversation'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex-grow overflow-hidden">
-              {selectedConversation ? (
-                <MessageView conversationId={selectedConversation} />
-              ) : (
-                <div className="flex justify-center items-center h-full text-gray-500">
-                  Select a conversation to view messages
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-    </div>
+        <Card className="md:col-span-2 min-h-[600px] flex flex-col">
+          <CardHeader className="pb-2">
+            <CardTitle>
+              {selectedConversation ? 'Messages' : 'Select a conversation'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex-grow overflow-hidden p-0">
+            {selectedConversation ? (
+              <MessageView conversationId={selectedConversation} />
+            ) : (
+              <div className="flex justify-center items-center h-full text-gray-500 p-4">
+                Select a conversation to view messages
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </AppLayout>
   );
 };
 

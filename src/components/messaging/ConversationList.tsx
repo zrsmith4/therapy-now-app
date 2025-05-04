@@ -3,10 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Search } from 'lucide-react';
+import { Search, MessageCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { handleError } from '@/utils/errorHandling';
+import { format } from 'date-fns';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ConversationListProps {
   onSelectConversation: (conversationId: string) => void;
@@ -26,6 +29,10 @@ interface Conversation {
   updated_at: string;
   unread_count: number;
   other_user_details: UserDetails;
+  last_message?: {
+    content: string;
+    created_at: string;
+  };
 }
 
 const ConversationList: React.FC<ConversationListProps> = ({
@@ -34,6 +41,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
 }) => {
   const { user, userRole } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [filteredConversations, setFilteredConversations] = useState<Conversation[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -56,7 +64,8 @@ const ConversationList: React.FC<ConversationListProps> = ({
       const { data: conversationsData, error: conversationsError } = await supabase
         .from('conversations')
         .select('*')
-        .eq(userIdField, user.id);
+        .eq(userIdField, user.id)
+        .order('updated_at', { ascending: false });
       
       if (conversationsError) throw conversationsError;
       
@@ -67,7 +76,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
         return;
       }
 
-      // Fetch unread count for each conversation
+      // Fetch additional details for each conversation
       const conversationsWithDetails = await Promise.all(
         conversationsData.map(async (conversation) => {
           // Count unread messages
@@ -110,33 +119,66 @@ const ConversationList: React.FC<ConversationListProps> = ({
             }
           }
 
+          // Get the last message in this conversation
+          const { data: lastMessageData, error: lastMessageError } = await supabase
+            .from('messages')
+            .select('content, created_at')
+            .eq('conversation_id', conversation.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+          if (lastMessageError && lastMessageError.code !== 'PGRST116') {
+            console.error('Error fetching last message:', lastMessageError);
+          }
+
           return {
             ...conversation,
             unread_count: unreadCount || 0,
-            other_user_details: otherUserDetails
+            other_user_details: otherUserDetails,
+            last_message: lastMessageData || undefined
           };
         })
       );
 
-      // Sort conversations by updated_at date (most recent first)
-      const sortedConversations = conversationsWithDetails.sort((a, b) => 
-        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-      );
-
-      setConversations(sortedConversations);
-      setFilteredConversations(sortedConversations);
+      setConversations(conversationsWithDetails);
+      setFilteredConversations(conversationsWithDetails);
     } catch (err) {
-      console.error('Error fetching conversations:', err);
-      setError('Failed to load conversations');
-      toast({ 
-        title: "Error", 
-        description: "Failed to load conversations", 
-        variant: "destructive" 
+      handleError(err, {
+        context: 'fetching conversations',
+        toastTitle: "Error", 
+        toastDescription: "Failed to load conversations"
       });
+      setError('Failed to load conversations');
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Subscribe to changes in conversations
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('conversation_updates')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'conversations' },
+        () => {
+          fetchConversations();
+        }
+      )
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages' },
+        () => {
+          fetchConversations();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   // Filter conversations based on search query
   useEffect(() => {
@@ -159,6 +201,11 @@ const ConversationList: React.FC<ConversationListProps> = ({
       fetchConversations();
     }
   }, [user, userRole]);
+
+  // Format the preview text for the last message
+  const formatMessagePreview = (content: string) => {
+    return content.length > 30 ? content.substring(0, 30) + '...' : content;
+  };
 
   if (isLoading) {
     return (
@@ -194,7 +241,11 @@ const ConversationList: React.FC<ConversationListProps> = ({
   if (conversations.length === 0) {
     return (
       <div className="p-4 text-center">
+        <MessageCircle className="mx-auto h-12 w-12 text-gray-400 mb-2" />
         <p className="text-gray-500">No conversations yet</p>
+        <p className="text-gray-400 text-sm mt-1">
+          Your message threads with therapists will appear here
+        </p>
       </div>
     );
   }
@@ -212,7 +263,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
         />
       </div>
       
-      <div className="space-y-2">
+      <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
         {filteredConversations.map((conversation) => (
           <div
             key={conversation.id}
@@ -234,8 +285,17 @@ const ConversationList: React.FC<ConversationListProps> = ({
                   </span>
                 )}
               </div>
-              <p className="text-sm text-gray-500 truncate">
-                {new Date(conversation.updated_at).toLocaleDateString()} {new Date(conversation.updated_at).toLocaleTimeString()}
+              <div className="text-sm text-gray-500 truncate">
+                {conversation.last_message ? (
+                  <span>{formatMessagePreview(conversation.last_message.content)}</span>
+                ) : (
+                  <span>No messages yet</span>
+                )}
+              </div>
+              <p className="text-xs text-gray-400">
+                {conversation.last_message 
+                  ? format(new Date(conversation.last_message.created_at), 'MMM d, h:mm a')
+                  : format(new Date(conversation.updated_at), 'MMM d, h:mm a')}
               </p>
             </div>
           </div>
