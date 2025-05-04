@@ -15,9 +15,14 @@ const Messages = () => {
   const navigate = useNavigate();
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
 
-  // If user is not authenticated, redirect to login
+  // Check if we're in development environment
+  const isDevelopment = process.env.NODE_ENV === 'development' || 
+                        window.location.hostname.includes('lovable.app') || 
+                        window.location.hostname === 'localhost';
+
+  // If user is not authenticated and we're not in development mode, redirect to login
   useEffect(() => {
-    if (!user) {
+    if (!user && !isDevelopment) {
       toast({
         variant: "destructive",
         title: "Authentication required",
@@ -25,13 +30,14 @@ const Messages = () => {
       });
       navigate('/auth');
     }
-  }, [user, navigate, toast]);
+  }, [user, navigate, toast, isDevelopment]);
 
   const handleSelectConversation = (conversationId: string) => {
     setSelectedConversation(conversationId);
   };
 
-  if (!user) {
+  // Show loading skeleton only if we need authentication (not in dev mode) and user is not logged in
+  if (!user && !isDevelopment) {
     return (
       <div className="min-h-screen bg-slate-50">
         <AppHeader />
