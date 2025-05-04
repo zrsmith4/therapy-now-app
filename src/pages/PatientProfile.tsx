@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppHeader from '@/components/layout/AppHeader';
@@ -15,16 +14,39 @@ const PatientProfile = () => {
   const [loading, setLoading] = useState(true);
   const [patientData, setPatientData] = useState<any>(null);
   const [medicalHistory, setMedicalHistory] = useState<any>(null);
+  
+  // Check if we're in development environment
+  const isDevelopment = process.env.NODE_ENV === 'development' || 
+                        window.location.hostname.includes('lovable.app') || 
+                        window.location.hostname === 'localhost';
 
   useEffect(() => {
     const checkSession = async () => {
       try {
+        // If in development mode, use mock data
+        if (isDevelopment) {
+          console.log('Development mode: Using mock patient data');
+          setUserId('mock-patient-id');
+          setPatientData({
+            first_name: 'Demo',
+            last_name: 'Patient',
+          });
+          setMedicalHistory({
+            primary_concern: 'Lower back pain',
+            pain_level: 'Moderate',
+            injury_location: 'Lumbar spine',
+            current_medications: 'None'
+          });
+          setLoading(false);
+          return;
+        }
+        
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) throw error;
         
         if (!session) {
-          navigate('/login');
+          navigate('/auth'); // Changed from '/login' to '/auth'
           return;
         }
         
@@ -66,7 +88,7 @@ const PatientProfile = () => {
     };
     
     checkSession();
-  }, [navigate, toast]);
+  }, [navigate, toast, isDevelopment]);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading profile...</div>;
