@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppHeader from '@/components/layout/AppHeader';
@@ -13,7 +12,7 @@ const Index = () => {
   const navigate = useNavigate();
   
   if (userType === 'therapist') {
-    navigate('/login', { state: { userType: 'therapist' } });
+    navigate('/auth', { state: { userType: 'therapist' } });
     return null;
   }
   

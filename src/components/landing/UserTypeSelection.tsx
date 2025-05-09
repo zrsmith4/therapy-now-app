@@ -13,7 +13,8 @@ const UserTypeSelection = ({ onSelectUserType }: UserTypeSelectionProps) => {
   const navigate = useNavigate();
   
   const handleTherapistClick = () => {
-    navigate('/login', { state: { userType: 'therapist' } });
+    // Update to use /auth instead of /login
+    navigate('/auth', { state: { userType: 'therapist' } });
   };
 
   return (
