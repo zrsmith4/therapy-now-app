@@ -47,7 +47,7 @@ import TherapistPatientsList from "@/components/dashboard/TherapistPatientsList"
 // Maintenance mode wrapper component
 const MaintenanceWrapper = ({ children }) => {
   // You can easily toggle this to false when you want to disable maintenance mode
-  const isMaintenanceMode = true;
+  const isMaintenanceMode = false;
   const location = useLocation();
   
   // Check if current path starts with /maintenance
