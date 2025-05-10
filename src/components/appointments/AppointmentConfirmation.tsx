@@ -3,7 +3,7 @@ import React from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Check, X } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { useAppointmentActions } from "@/hooks/useAppointmentActions"
 
 interface AppointmentConfirmationProps {
   appointment: {
@@ -34,19 +34,7 @@ const AppointmentConfirmation = ({
   onAccept,
   onDecline
 }: AppointmentConfirmationProps) => {
-  const { toast } = useToast();
-  
-  const handleAccept = () => {
-    // This would normally call an API to accept the appointment
-    toast({
-      title: "Appointment accepted",
-      description: "An email confirmation has been sent to both you and the patient.",
-    });
-    
-    // For demo/scaffolding purposes, we're just calling onAccept
-    // In a real implementation, this would trigger the email service
-    onAccept();
-  };
+  const { handleAccept } = useAppointmentActions({ onAccept });
   
   return (
     <Card className="shadow-lg border-2 border-medical-light">
