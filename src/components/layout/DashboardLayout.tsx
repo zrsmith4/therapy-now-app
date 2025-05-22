@@ -41,4 +41,3 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, isLoading =
 };
 
 export default DashboardLayout;
-
