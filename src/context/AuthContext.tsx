@@ -1,8 +1,9 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
+// Remove duplicate import of UserRole from authService!
 import { 
-  UserRole, 
   signUp as authSignUp, 
   signIn as authSignIn, 
   signOut as authSignOut,
@@ -10,6 +11,9 @@ import {
   setupAuthStateListener,
   fetchUserRole
 } from '@/services/authService';
+
+// Define UserRole type here, including 'admin'
+export type UserRole = 'patient' | 'therapist' | 'admin' | null;
 
 interface AuthContextType {
   session: Session | null;
@@ -30,8 +34,6 @@ export const useAuth = () => {
   }
   return context;
 };
-
-export type UserRole = 'patient' | 'therapist' | 'admin' | null;
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
@@ -61,7 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (session?.user) {
         fetchUserRole(session.user.id).then(role => {
-          setUserRole(role);
+          setUserRole(role as UserRole); // Explicitly cast here
           setIsLoading(false);
         });
       } else {

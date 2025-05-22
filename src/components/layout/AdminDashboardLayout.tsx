@@ -9,7 +9,6 @@ interface AdminDashboardLayoutProps {
 }
 const adminNavLinks = [
   { to: "/admin", icon: Home, label: "Dashboard" },
-  // Example navigation items for admins:
   { to: "/admin/users", icon: Users, label: "Manage Users" },
   { to: "/admin/appointments", icon: FileText, label: "Appointments" }
 ];
@@ -25,7 +24,7 @@ const AdminDashboardLayout: React.FC<AdminDashboardLayoutProps> = ({ children })
             <SidebarGroupContent>
               <SidebarMenu>
                 {adminNavLinks.map(item => (
-                  <SidebarMenuItem key={item.to} active={location.pathname === item.to}>
+                  <SidebarMenuItem key={item.to}>
                     <SidebarMenuButton asChild>
                       <Link to={item.to} className="flex items-center space-x-2">
                         <item.icon size={18} />
