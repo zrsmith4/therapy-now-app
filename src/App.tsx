@@ -62,6 +62,8 @@ const MaintenanceWrapper = ({ children }) => {
   return <>{children}</>;
 };
 
+import AdminOverviewPage from "./pages/AdminOverviewPage";
+
 const App = () => {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
