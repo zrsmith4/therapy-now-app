@@ -9,10 +9,11 @@ interface DashboardLayoutProps {
   isLoading?: boolean;
 }
 
+// Widened to accept 'admin'
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, isLoading = false }) => {
   const { user, userRole } = useAuth();
 
-  // Only pass type supported by AppHeader
+  // Accepts 'patient', 'therapist', or 'admin'
   const headerUserType: 'patient' | 'therapist' | 'admin' =
     userRole === 'therapist' || userRole === 'patient' || userRole === 'admin'
       ? userRole
@@ -40,3 +41,4 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, isLoading =
 };
 
 export default DashboardLayout;
+
