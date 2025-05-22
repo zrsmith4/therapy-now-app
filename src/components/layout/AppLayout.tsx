@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import AppHeader from './AppHeader';
 import { useAuth } from '@/context/AuthContext';
 
@@ -10,11 +10,16 @@ interface AppLayoutProps {
 
 const AppLayout: React.FC<AppLayoutProps> = ({ children, isLoading = false }) => {
   const { user, userRole } = useAuth();
-  
+
+  // Only pass 'patient', 'therapist', or 'admin'; fallback to 'patient' for unknowns
+  const headerUserType = userRole === 'patient' || userRole === 'therapist' || userRole === 'admin'
+    ? userRole
+    : 'patient';
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <AppHeader 
-        userType={userRole || 'patient'} 
+        userType={headerUserType} 
         userName={user?.email || 'Guest'} 
         isLoading={isLoading}
       />

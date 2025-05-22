@@ -11,12 +11,17 @@ interface DashboardLayoutProps {
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, isLoading = false }) => {
   const { user, userRole } = useAuth();
-  
+
+  // Only pass type supported by AppHeader
+  const headerUserType = userRole === 'therapist' || userRole === 'patient' || userRole === 'admin'
+    ? userRole
+    : 'therapist';
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <AppHeader 
-        userType={userRole || "therapist"} 
-        userName={user?.email || 'Therapist'} 
+        userType={headerUserType}
+        userName={user?.email || (userRole === 'patient' ? 'Patient' : userRole === 'admin' ? 'Admin' : 'Therapist')}
         isLoading={isLoading}
       />
       <main className="container mx-auto px-4 py-8 mt-16 flex-grow">

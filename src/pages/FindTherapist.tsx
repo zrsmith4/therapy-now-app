@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import AppHeader from '@/components/layout/AppHeader';
 import TherapistFilterBar from '@/components/therapists/TherapistFilterBar';
@@ -60,6 +59,9 @@ const FindTherapist = () => {
     id: string;
     name: string;
   } | null>(null);
+
+  // Only allow 'patient' as userType for this flow
+  const headerUserType: 'patient' = 'patient';
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -166,7 +168,7 @@ const FindTherapist = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <AppHeader userType={userRole || 'patient'} userName={user?.email || ''} />
+      <AppHeader userType={headerUserType} userName={user?.email || ''} />
       
       <main className="container px-4 py-8">
         <div className="flex flex-col md:flex-row gap-6">
