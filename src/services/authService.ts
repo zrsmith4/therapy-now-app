@@ -1,8 +1,7 @@
-
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
-export type UserRole = 'patient' | 'therapist' | null;
+export type UserRole = 'patient' | 'therapist' | 'admin' | null;
 
 interface AuthData {
   user: User | null;

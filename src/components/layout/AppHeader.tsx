@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -35,10 +34,8 @@ export default function AppHeader({
                   Welcome, {userName}!
                 </span>
               )}
-
               {/* Only show notifications for logged in roles */}
-              {!!userType && userType !== null && userType !== undefined && userType !== '' && <NotificationsDropdown />}
-
+              {!!userType && <NotificationsDropdown />}
               <Button variant="outline" size="sm" onClick={signOut}>
                 Log Out
               </Button>

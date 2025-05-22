@@ -45,6 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = setupAuthStateListener(({ session, user, userRole }) => {
       setSession(session);
       setUser(user);
+      // updated to match 'admin'
       if (userRole !== undefined) {
         setUserRole(
           userRole === 'admin' || userRole === 'therapist' || userRole === 'patient'

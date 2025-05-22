@@ -17,13 +17,14 @@ const Appointments = () => {
   }
 
   // Only allow patient or therapist logic here, fallback to patient if for some reason admin reaches
-  const pageUserType: 'patient' | 'therapist' = (userRole === 'therapist' ? 'therapist' : 'patient');
+  const pageUserType: 'patient' | 'therapist' =
+    userRole === 'therapist' ? 'therapist' : 'patient';
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <AppHeader 
+      <AppHeader
         userType={pageUserType}
-        userName={user.email} 
+        userName={user.email}
       />
 
       <main className="container px-4 py-8">
@@ -31,8 +32,8 @@ const Appointments = () => {
           <h1 className="text-2xl font-bold">My Appointments</h1>
 
           <div className="flex gap-2">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               className="gap-1"
             >
