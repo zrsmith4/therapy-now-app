@@ -483,8 +483,13 @@ export type Database = {
         Args: { p_patient_id: string; p_therapist_id: string }
         Returns: boolean
       }
+      is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
+      app_role: "patient" | "therapist" | "admin"
       appointment_request_status:
         | "pending"
         | "accepted"
@@ -605,6 +610,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["patient", "therapist", "admin"],
       appointment_request_status: [
         "pending",
         "accepted",

@@ -9,6 +9,7 @@ import { AuthProvider } from "@/context/AuthContext";
 // Layouts
 import AppLayout from "@/components/layout/AppLayout";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import AdminDashboardLayout from "@/components/layout/AdminDashboardLayout";
 
 // Auth and protection
 import PrivateRoute from "@/components/auth/PrivateRoute";
@@ -180,6 +181,21 @@ const App = () => {
                 {/* Redirect /schedule and /patients to their nested dashboard routes */}
                 <Route path="/schedule" element={<Navigate to="/therapist-dashboard/schedule" replace />} />
                 <Route path="/patients" element={<Navigate to="/therapist-dashboard/patients" replace />} />
+
+                {/* ADMIN DASHBOARD (admin-only access) */}
+                <Route
+                  path="/admin"
+                  element={
+                    <PrivateRoute requiredRole="admin">
+                      <AdminDashboardLayout />
+                    </PrivateRoute>
+                  }
+                >
+                  <Route index element={<AdminOverviewPage />} />
+                  {/* Example additional admin pages (stubs) */}
+                  <Route path="users" element={<div>Users Management Page (Coming Soon)</div>} />
+                  <Route path="appointments" element={<div>Appointments Management Page (Coming Soon)</div>} />
+                </Route>
 
                 {/* 404 - Not Found */}
                 <Route path="*" element={<NotFound />} />

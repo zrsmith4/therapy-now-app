@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
@@ -32,6 +31,8 @@ export const useAuth = () => {
   return context;
 };
 
+export type UserRole = 'patient' | 'therapist' | 'admin' | null;
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -45,7 +46,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(user);
       if (userRole !== undefined) {
-        setUserRole(userRole);
+        setUserRole(
+          userRole === 'admin' || userRole === 'therapist' || userRole === 'patient'
+            ? userRole
+            : null
+        );
       }
     });
 
