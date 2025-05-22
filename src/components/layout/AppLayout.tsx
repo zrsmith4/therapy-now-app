@@ -1,4 +1,3 @@
-
 import React from 'react';
 import AppHeader from './AppHeader';
 import { useAuth } from '@/context/AuthContext';
@@ -10,7 +9,7 @@ interface AppLayoutProps {
 const AppLayout: React.FC<AppLayoutProps> = ({ children, isLoading = false }) => {
   const { user, userRole } = useAuth();
 
-  // Only pass 'patient', 'therapist', or 'admin'; fallback to 'patient' for unknowns
+  // Allow 'patient', 'therapist', or 'admin'
   const headerUserType: 'patient' | 'therapist' | 'admin' =
     userRole === 'patient' || userRole === 'therapist' || userRole === 'admin'
       ? userRole
