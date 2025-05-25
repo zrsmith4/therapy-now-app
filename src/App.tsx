@@ -84,18 +84,18 @@ const App = () => {
           <BrowserRouter>
             <MaintenanceWrapper>
               <Routes>
-                {/* Maintenance Routes - Always accessible */}
+                {/* Maintenance Routes */}
                 <Route path="/maintenance" element={<MaintenancePage />} />
                 <Route path="/maintenance/status" element={<MaintenanceStatusPage />} />
-                
+
                 {/* Public Routes */}
                 <Route path="/" element={<AppLayout><Index /></AppLayout>} />
                 <Route path="/pricing" element={<AppLayout><PricingInfo /></AppLayout>} />
                 <Route path="/signup" element={<AppLayout><SignUpChoice /></AppLayout>} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/unauthorized" element={<Unauthorized />} />
-                
-                {/* Routes accessible by both roles */}
+
+                {/* Protected: Both roles */}
                 <Route path="/my-profile" element={
                   <AppLayout>
                     <PrivateRoute>
@@ -103,7 +103,7 @@ const App = () => {
                     </PrivateRoute>
                   </AppLayout>
                 } />
-                
+
                 <Route path="/messages" element={
                   <AppLayout>
                     <PrivateRoute>
@@ -111,7 +111,7 @@ const App = () => {
                     </PrivateRoute>
                   </AppLayout>
                 } />
-                
+
                 <Route path="/appointments" element={
                   <AppLayout>
                     <PrivateRoute>
@@ -119,15 +119,15 @@ const App = () => {
                     </PrivateRoute>
                   </AppLayout>
                 } />
-                
-                {/* New Notifications route */}
+
+                {/* Notifications */}
                 <Route path="/notifications" element={
                   <PrivateRoute>
                     <Notifications />
                   </PrivateRoute>
                 } />
 
-                {/* Patient-only routes */}
+                {/* Patient-only */}
                 <Route path="/find-therapist" element={
                   <AppLayout>
                     <PrivateRoute requiredRole="patient">
@@ -135,32 +135,32 @@ const App = () => {
                     </PrivateRoute>
                   </AppLayout>
                 } />
-                
+
                 <Route path="/patient-profile" element={
                   <PrivateRoute requiredRole="patient">
                     <PatientProfile />
                   </PrivateRoute>
                 } />
-                
+
                 <Route path="/patient-signup" element={
                   <AppLayout>
                     <PatientSignup />
                   </AppLayout>
                 } />
 
-                {/* Therapist-only routes */}
+                {/* Therapist-only */}
                 <Route path="/therapist-profile" element={
                   <PrivateRoute requiredRole="therapist">
                     <TherapistProfile />
                   </PrivateRoute>
                 } />
-                
+
                 <Route path="/therapist-signup" element={
                   <AppLayout>
                     <TherapistSignup />
                   </AppLayout>
                 } />
-                
+
                 <Route path="/therapist-documentation" element={
                   <AppLayout>
                     <PrivateRoute requiredRole="therapist">
@@ -169,7 +169,7 @@ const App = () => {
                   </AppLayout>
                 } />
 
-                {/* Therapist Dashboard with nested routes */}
+                {/* Therapist Dashboard */}
                 <Route path="/therapist-dashboard" element={
                   <PrivateRoute requiredRole="therapist">
                     <DashboardLayout />
@@ -180,13 +180,14 @@ const App = () => {
                   <Route path="patients" element={<TherapistPatientsList />} />
                 </Route>
 
-                {/* Redirect /schedule and /patients to their nested dashboard routes */}
+                {/* Redirects */}
                 <Route path="/schedule" element={<Navigate to="/therapist-dashboard/schedule" replace />} />
                 <Route path="/patients" element={<Navigate to="/therapist-dashboard/patients" replace />} />
 
-                {/* ADMIN DASHBOARD (admin-only access) */}
+                {/* ADMIN DASHBOARD */}
                 <Route
                   path="/admin"
+                  // There is NO userType prop explicitly sent here. AdminDashboardLayout just renders children.
                   element={
                     <PrivateRoute requiredRole="admin">
                       <AdminDashboardLayout />
@@ -194,12 +195,11 @@ const App = () => {
                   }
                 >
                   <Route index element={<AdminOverviewPage />} />
-                  {/* Example additional admin pages (stubs) */}
                   <Route path="users" element={<div>Users Management Page (Coming Soon)</div>} />
                   <Route path="appointments" element={<div>Appointments Management Page (Coming Soon)</div>} />
                 </Route>
 
-                {/* 404 - Not Found */}
+                {/* 404 */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </MaintenanceWrapper>
