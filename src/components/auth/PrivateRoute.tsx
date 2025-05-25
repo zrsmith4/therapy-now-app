@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 
 interface PrivateRouteProps {
   children: React.ReactNode;
-  requiredRole?: 'patient' | 'therapist';
+  requiredRole?: 'patient' | 'therapist' | 'admin';
 }
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, requiredRole }) => {
