@@ -3,6 +3,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { Home, Users, FileText } from "lucide-react";
+import { SidebarProvider } from '@/context/SidebarContext'; 
 
 interface AdminDashboardLayoutProps {
   children?: React.ReactNode;
@@ -16,32 +17,34 @@ const adminNavLinks = [
 const AdminDashboardLayout: React.FC<AdminDashboardLayoutProps> = ({ children }) => {
   const location = useLocation();
   return (
-    <div className="min-h-screen flex bg-slate-50">
-      <Sidebar>
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>Admin Panel</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {adminNavLinks.map(item => (
-                  <SidebarMenuItem key={item.to}>
-                    <SidebarMenuButton asChild>
-                      <Link to={item.to} className="flex items-center space-x-2">
-                        <item.icon size={18} />
-                        <span>{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-      </Sidebar>
-      <main className="flex-1 container mx-auto px-4 py-8 mt-2">
-        {children}
-      </main>
-    </div>
+    <SidebarProvider>
+      <div className="min-h-screen flex bg-slate-50">
+        <Sidebar>
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupLabel>Admin Panel</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {adminNavLinks.map(item => (
+                    <SidebarMenuItem key={item.to}>
+                      <SidebarMenuButton asChild>
+                        <Link to={item.to} className="flex items-center space-x-2">
+                          <item.icon size={18} />
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+        </Sidebar>
+        <main className="flex-1 container mx-auto px-4 py-8 mt-2">
+          {children}
+        </main>
+      </div>
+    </SidebarProvider>
   );
 };
 export default AdminDashboardLayout;
